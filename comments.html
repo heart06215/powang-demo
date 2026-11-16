@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<script src="/powang-demo/pages-runtime.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>破妄 · 评论浏览</title>
+<script src="theme.js"></script><script src="/powang-demo/count-format.js"></script>
+<link rel="stylesheet" href="base.css">
+<style>
+  .wrap { max-width:1920px; padding-top:20px; }
+  .wrap > .kicker { margin-bottom:8px; }
+  .filter-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .f-cat { padding:7px 12px; border:2px solid var(--line); font-weight:900; font-size:var(--type-small); letter-spacing:2px; text-transform:uppercase; cursor:pointer; background:var(--surface); }
+  .f-cat:hover { background:var(--hover); }
+  .f-cat.on.praise { background:var(--cat-praise); color:#fff; }
+  .f-cat.on.blame { background:var(--cat-blame); color:#fff; }
+  .f-cat.on.shui { background:var(--cat-shui); color:#0E1116; }
+  .f-cat.on.noise { background:var(--cat-noise); color:#fff; }
+  .f-cat.on.feud { background:var(--cat-feud); color:#fff; }
+  .f-cat.on.neutral { background:var(--cat-neutral); color:#fff; }
+  .f-cat.on.all { background:var(--ink); color:var(--paper); }
+  html[data-theme="dark"] .f-cat.on.all { color:#090B10; }
+  #videoSel, #searchBox, #orderSel { padding:7px 10px; font-size:var(--type-small); }
+
+  /* 密密麻麻的评论方格墙 */
+  .list-bar { display:flex; align-items:center; gap:10px; margin:0 0 8px; }
+  .list-bar .btn { padding:5px 12px; font-size:var(--type-caption); letter-spacing:1.5px; }
+  .c-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(170px, 1fr));
+    grid-auto-rows:80px;
+    gap:6px;
+  }
+  .c-cell {
+    position:relative; display:flex; flex-direction:column; gap:2px;
+    width:100%; height:100%; min-width:0; overflow:hidden;
+    padding:3px 6px 3px 9px; border:1.5px solid var(--line);
+    background:var(--surface); color:var(--ink); font-family:inherit;
+    text-align:left; cursor:pointer; -webkit-appearance:none; appearance:none;
+  }
+  .c-cell::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--cat-noise); z-index:1; }
+  .c-cell.praise::before { background:var(--cat-praise); }
+  .c-cell.blame::before { background:var(--cat-blame); }
+  .c-cell.shui::before { background:var(--cat-shui); }
+  .c-cell.noise::before { background:var(--cat-noise); }
+  .c-cell.feud::before { background:var(--cat-feud); }
+  .c-cell.neutral::before { background:var(--cat-neutral); }
+  .c-cell:hover { background:var(--hover); border-color:var(--blue); }
+  .c-cell:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+  .c-top { display:flex; align-items:center; gap:4px; flex:none; }
+  .c-cell .badge { flex:none; min-width:28px; text-align:center; font-size:var(--type-caption); line-height:1.4; padding:0 3px; letter-spacing:.2px; }
+  .c-conf { font-size:var(--type-caption); color:var(--muted); letter-spacing:0; }
+  .c-chev { margin-left:auto; flex:none; width:10px; height:10px; display:flex; align-items:center; justify-content:center; border:1px solid var(--line); font-size:var(--type-caption); font-weight:900; line-height:1; color:var(--ink); }
+  .c-text { flex:1; min-height:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; font-size:var(--type-caption); line-height:1.45; word-break:break-word; }
+  .c-foot { display:flex; flex:none; justify-content:space-between; gap:4px; font-size:var(--type-caption); color:var(--muted); white-space:nowrap; }
+  .c-empty { grid-column:1 / -1; padding:40px 16px; text-align:center; border:2px solid var(--line); background:var(--surface); }
+
+  /* 点击方块后的详情弹层 */
+  .c-dialog { width:min(720px, calc(100vw - 32px)); max-height:82vh; margin:auto; padding:0; border:3px solid var(--line); background:var(--surface); color:var(--ink); }
+  .c-dialog::backdrop { background:rgba(9,11,16,.58); }
+  .c-dialog-head { display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:2px solid var(--line); background:var(--hover); }
+  .dialog-meta { margin-left:auto; font-size:var(--type-caption); color:var(--muted); }
+  .c-dialog-close { width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex:none; border:2px solid var(--line); background:var(--surface); color:var(--ink); font-size:var(--type-title); font-weight:900; line-height:1; cursor:pointer; }
+  .c-dialog-close:hover { background:var(--pink); border-color:var(--pink); color:#fff; }
+  .c-dialog-body { padding:14px 16px 18px; max-height:calc(82vh - 52px); overflow:auto; scrollbar-width:thin; }
+  .d-text { font-size:var(--type-body); line-height:1.85; white-space:pre-wrap; word-break:break-word; }
+  .d-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px 16px; margin-top:14px; padding-top:12px; border-top:1px solid var(--grid); font-size:var(--type-small); color:var(--muted); }
+  .d-grid b { color:var(--ink); font-weight:900; letter-spacing:.5px; margin-right:3px; }
+  .d-grid .d-reason { grid-column:1 / -1; }
+  .d-tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:12px; }
+  .slang-chip { display:inline-block; font-size:var(--type-caption); padding:0 7px; border:1.5px solid var(--violet); color:var(--violet); font-weight:700; }
+
+  /* 无限下拉状态 */
+  .sentinel { min-height:54px; display:flex; align-items:center; justify-content:center; padding:12px 0; }
+  .load-state { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; font-size:var(--type-small); letter-spacing:1.5px; color:var(--muted); }
+  .load-state .btn { padding:5px 12px; font-size:var(--type-caption); letter-spacing:1.5px; }
+  .load-state .err { color:var(--cat-blame); }
+  .spinner { width:12px; height:12px; border:2px solid var(--grid); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
+  .end-line { width:36px; height:2px; background:var(--grid); }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  @media (max-width:640px) {
+    .c-grid { grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); grid-auto-rows:80px; }
+    .c-text { -webkit-line-clamp:3; font-size:var(--type-caption); }
+    .dialog-meta { display:none; }
+    .filter-bar select, .filter-bar input { min-width:0; }
+  }
+</style>
+<link rel="stylesheet" href="/powang-demo/governance.css">
+<link rel="stylesheet" href="/powang-demo/tools.css">
+<script src="/powang-demo/workspace.js" defer></script>
+<link rel="icon" href="/powang-demo/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/powang-demo/research.css">
+<script src="/powang-demo/research-core.js"></script>
+</head>
+<body class="tool-page workspace-page">
+<a class="skip-link" href="#main">跳至主要内容</a><div id="workspaceNav"></div><div class="app-workspace"><header class="app-topbar" id="workspaceTopbar"></header>
+
+<main class="wrap" id="main">
+  <div class="kicker">原文检索 · 人工核验</div>
+  <h1 class="display" style="font-size:var(--type-display);margin-bottom:4px">评论<span class="stroke">证据库</span></h1>
+  <p class="muted mb">定位原文，核对圈层语境与分类理由，为立法评估保留可追溯材料。</p>
+
+  <ol class="research-route" aria-label="治理研究流程"><li><span>01 / 结构观察</span><small>看分类与时间变化</small></li><li><span>02 / 话术关联</span><small>找圈层词与相似表达</small></li><li aria-current="step"><span>03 / 原文核对</span><small>查来源、语境与理由</small></li><li><span>04 / 人工复核</span><small>把难例沉淀为示范</small></li></ol>
+  <h2 class="tool-section-title">按分类与关键词，缩小核验范围</h2>
+  <div class="filter-bar">
+    <select aria-label="选择研究视频" id="videoSel" style="min-width:210px"></select>
+    <div class="category-filters" role="group" aria-label="按评论分类筛选">
+    <button type="button" class="f-cat on all" data-c="all">全部</button>
+    <button type="button" class="f-cat praise" data-c="赞美">赞美</button>
+    <button type="button" class="f-cat blame" data-c="贬低">贬低</button>
+    <button type="button" class="f-cat shui" data-c="水军">组织化刷评</button>
+    <button type="button" class="f-cat noise" data-c="无意义">无意义</button>
+    <button type="button" class="f-cat feud" data-c="社区对骂">社区对骂</button>
+    <button type="button" class="f-cat neutral" data-c="中立">中立</button>
+    </div>
+    <input aria-label="搜索评论关键词" id="searchBox" placeholder="关键词搜索 ↵" style="flex:1;min-width:170px">
+    <select aria-label="评论排序方式" id="orderSel"><option value="ctime">按时间</option><option value="like">按点赞</option></select>
+  </div>
+
+  <details class="comment-distribution">
+    <summary>查看六分类数量与占比</summary>
+    <div id="catStrip" class="flex" style="gap:8px;flex-wrap:wrap"></div>
+  </details>
+
+  <div class="list-bar">
+    <span id="listInfo" class="muted mono">加载中…</span>
+    <button class="btn ghost" id="reloadB">刷新</button>
+  </div>
+
+  <div id="list" class="c-grid"></div>
+  <div id="sentinel" class="sentinel" aria-live="polite">
+    <div id="loadState" class="load-state"><span class="spinner"></span><span>正在加载评论…</span></div>
+  </div>
+</main>
+
+<dialog id="detailDialog" class="c-dialog" aria-label="评论详情">
+  <div class="c-dialog-head">
+    <span id="dialogBadge"></span>
+    <span id="dialogMeta" class="dialog-meta mono"></span>
+    <button type="button" class="c-dialog-close" data-close aria-label="关闭">×</button>
+  </div>
+  <div id="dialogBody" class="c-dialog-body"></div>
+</dialog>
+
+<footer class="footer">
+  <span class="brand-name" style="font-size:var(--type-lead);letter-spacing:4px">破妄</span>
+  <span class="muted">模型先分类 · 人工核对原文 · 难例进入复核</span>
+  <span style="flex:1"></span>
+  <div class="dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span><span class="d4"></span></div>
+</footer>
+
+<script>
+const CATS = ["赞美", "贬低", "水军", "无意义", "社区对骂", "中立"];
+const CLS = { "赞美": "praise", "贬低": "blame", "水军": "shui", "无意义": "noise", "社区对骂": "feud", "中立": "neutral" };
+const PAGE_SIZE = 96;
+
+const $ = id => document.getElementById(id);
+const listEl = $("list"), stateEl = $("loadState"), infoEl = $("listInfo"), sentinel = $("sentinel");
+const dialog = $("detailDialog"), dialogBadge = $("dialogBadge"), dialogMeta = $("dialogMeta"), dialogBody = $("dialogBody");
+
+let videos = [];
+let curCat = "all";
+let page = 1, total = 0, loaded = 0;
+let loading = false, hasMore = true, paused = false, errorMessage = "";
+let generation = 0, searchTimer = null, ready = false;
+const records = [];
+
+async function api(url) {
+  const r = await fetch(url);
+  const d = await r.json();
+  if (!d.success) throw new Error(d.error || "请求失败");
+  return d.data;
+}
+
+function esc(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function fmtShort(t) {
+  if (!t) return "-";
+  const d = new Date(t * 1000), now = new Date();
+  const md = `${d.getMonth() + 1}/${d.getDate()}`;
+  return d.getFullYear() === now.getFullYear() ? md : `${String(d.getFullYear()).slice(-2)}/${md}`;
+}
+
+function fmtFull(t) {
+  return t ? new Date(t * 1000).toLocaleString("zh-CN", { hour12: false }) : "-";
+}
+
+function fmtLike(n) {
+  n = Number(n) || 0;
+  if (n >= 10000) return (n / 10000).toFixed(n >= 100000 ? 0 : 1) + "万";
+  return String(n);
+}
+
+function fmtPct(x) {
+  return ((Number(x) || 0) * 100).toFixed(0) + "%";
+}
+
+function cellHtml(c, idx) {
+  const cls = CLS[c.category] || "";
+  const badge = c.category
+    ? `<span class="badge ${cls}">${ResearchUI.categoryLabel(c.category)}</span>`
+    : `<span class="badge noise" style="opacity:.45">未分类</span>`;
+  const conf = c.category ? `<span class="c-conf mono">${fmtPct(c.confidence)}</span>` : "";
+  return `<button type="button" class="c-cell ${cls}" data-i="${idx}" title="点击展开全文">
+    <span class="c-top">${badge}${conf}<span class="c-chev" aria-hidden="true">+</span></span>
+    <span class="c-text">${esc(c.text || "（空评论）")}</span>
+    <span class="c-foot"><span class="mono">♥ ${fmtLike(c.like)}</span><span class="mono">${fmtShort(c.ctime)}</span></span>
+  </button>`;
+}
+
+function openDetail(c) {
+  const cls = CLS[c.category] || "";
+  dialogBadge.innerHTML = c.category
+    ? `<span class="badge ${cls}">${ResearchUI.categoryLabel(c.category)}</span>`
+    : `<span class="badge noise" style="opacity:.45">未分类</span>`;
+  dialogMeta.textContent = `♥ ${fmtLike(c.like)} · ${fmtFull(c.ctime)}${c.category ? ` · 置信度 ${fmtPct(c.confidence)}` : ""}`;
+  const tags = (c.slang_tags || []).filter(Boolean).slice(0, 20)
+    .map(s => `<span class="slang-chip">${esc(s)}</span>`).join("");
+  dialogBody.innerHTML = `
+    <div class="d-text">${esc(c.text || "（空评论）")}</div>
+    <div class="d-grid">
+      <span><b>用户</b> ${esc(c.uname || "匿名")}</span>
+      <span><b>时间</b> ${fmtFull(c.ctime)}</span>
+      <span><b>点赞</b> ${fmtLike(c.like)}</span>
+      <span><b>分类</b> ${esc(ResearchUI.categoryLabel(c.category || "未分类"))}</span>
+      ${c.category ? `<span><b>置信度</b> ${fmtPct(c.confidence)}</span>` : ""}
+      ${c.reason ? `<span class="d-reason"><b>模型理由</b> ${esc(c.reason)}</span>` : ""}
+    </div>
+    ${tags ? `<div class="d-tags">${tags}</div>` : ""}
+  `;
+  dialogBody.scrollTop = 0;
+  if (!dialog.open) dialog.showModal();
+}
+
+function renderState() {
+  if (errorMessage) {
+    stateEl.innerHTML = `<span class="err">加载失败：${esc(errorMessage)}</span><button class="btn ghost" data-retry>重试</button>`;
+    return;
+  }
+  if (loading) {
+    stateEl.innerHTML = `<span class="spinner"></span><span>正在加载评论…</span>`;
+    return;
+  }
+  if (!hasMore) {
+    stateEl.innerHTML = loaded
+      ? `<span class="end-line"></span><span>已加载全部 ${window.ResearchNumbers.commentCount(loaded)} 条</span><span class="end-line"></span>`
+      : `<span class="muted">—</span>`;
+    return;
+  }
+  stateEl.innerHTML = `<span>已加载 ${window.ResearchNumbers.commentCount(loaded)} / ${window.ResearchNumbers.commentCount(total)} 条 · 继续下滑自动加载</span>`;
+}
+
+function updateInfo() {
+  if (!total && !loaded) {
+    infoEl.textContent = loading ? "加载中…" : "暂无评论";
+  } else if (loaded >= total) {
+    infoEl.textContent = `共 ${window.ResearchNumbers.commentCount(total)} 条`;
+  } else {
+    infoEl.textContent = `共 ${window.ResearchNumbers.commentCount(total)} 条 · 已加载 ${window.ResearchNumbers.commentCount(loaded)} 条`;
+  }
+}
+
+function showEmpty(d) {
+  const filtered = curCat !== "all" || $("searchBox").value.trim();
+  let msg;
+  if (!d.analyzed) msg = "该视频尚未分析——请先到「标注」页完成锚定集并触发分析。";
+  else if (filtered) msg = "没有匹配的评论，试试更换分类或关键词。";
+  else msg = "暂无评论。";
+  listEl.innerHTML = `<div class="c-empty"><span class="muted">${msg}</span></div>`;
+}
+
+function fillViewport() {
+  if (loading || paused || !hasMore) return;
+  const rect = sentinel.getBoundingClientRect();
+  if (rect.top < window.innerHeight + 500) loadMore();
+}
+
+async function loadMore() {
+  if (!ready || loading || paused || !hasMore) return;
+  loading = true;
+  const gen = generation, p = page;
+  renderState();
+  updateInfo();
+  try {
+    const bvid = $("videoSel").value;
+    const order = $("orderSel").value;
+    const q = $("searchBox").value.trim();
+    const params = new URLSearchParams({ bvid, page: String(p), size: String(PAGE_SIZE), order });
+    if (curCat !== "all") params.set("category", curCat);
+    if (q) params.set("q", q);
+    const d = await api(`/api/comments?${params.toString()}`);
+    if (gen !== generation) return;
+    total = d.total || 0;
+    const items = d.items || [];
+    if (p === 1) {
+      listEl.innerHTML = "";
+      records.length = 0;
+    }
+    if (!items.length) {
+      if (p === 1) showEmpty(d);
+      hasMore = false;
+    } else {
+      const start = records.length;
+      records.push(...items);
+      listEl.insertAdjacentHTML("beforeend", items.map((c, i) => cellHtml(c, start + i)).join(""));
+      loaded += items.length;
+      page = p + 1;
+      hasMore = loaded < total;
+    }
+  } catch (e) {
+    if (gen !== generation) return;
+    paused = true;
+    hasMore = true;
+    errorMessage = e.message;
+  } finally {
+    if (gen === generation) {
+      loading = false;
+      renderState();
+      updateInfo();
+      if (!paused && hasMore) requestAnimationFrame(fillViewport);
+    }
+  }
+}
+
+function reset() {
+  generation++;
+  page = 1;
+  total = 0;
+  loaded = 0;
+  loading = false;
+  hasMore = true;
+  paused = false;
+  errorMessage = "";
+  records.length = 0;
+  listEl.innerHTML = "";
+  renderState();
+  updateInfo();
+  loadMore();
+}
+
+function applyCat(cat) {
+  curCat = cat;
+  document.querySelectorAll(".filter-bar .f-cat").forEach(x => {
+    x.classList.toggle("on", x.dataset.c === cat);
+    x.setAttribute("aria-pressed", String(x.dataset.c === cat));
+  });
+  reset();
+}
+
+async function loadStrip() {
+  const bvid = $("videoSel").value;
+  const strip = $("catStrip");
+  if (!bvid) { strip.innerHTML = ""; return; }
+  try {
+    const a = await api(`/api/analysis/${bvid}`);
+    const cs = a.category_count || {}, n = a.total || 0, denom = n || 1;
+    strip.innerHTML = CATS.map(c => {
+      const num = cs[c] || 0, p = ((num / denom) * 100).toFixed(1);
+      return `<div class="f-cat" data-c="${c}" style="cursor:pointer;opacity:.85" title="筛选${c}"><span class="badge ${CLS[c]}">${ResearchUI.categoryLabel(c)}</span> <b class="mono">${window.ResearchNumbers.commentCount(num)}</b> <span class="muted mono">${p}%</span></div>`;
+    }).join("") + `<div class="muted mono" style="align-self:center;padding:0 12px">总样本 ${window.ResearchNumbers.commentCount(n)}</div>`;
+    strip.querySelectorAll(".f-cat").forEach(f => f.onclick = () => applyCat(f.dataset.c));
+  } catch (e) {
+    strip.innerHTML = `<div class="muted">该视频尚未分析——先到「标注」页完成锚定集并触发分析。</div>`;
+  }
+}
+
+function setupInfinite() {
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) loadMore();
+    }, { rootMargin: "500px 0px" });
+    io.observe(sentinel);
+  } else {
+    window.addEventListener("scroll", () => {
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 500) loadMore();
+    }, { passive: true });
+  }
+}
+
+async function init() {
+  try {
+    const d = await api("/api/videos");
+    videos = d.videos || [];
+  } catch (e) {
+    hasMore = false;
+    listEl.innerHTML = `<div class="c-empty"><span style="color:var(--cat-blame)">加载视频列表失败：${esc(e.message)}</span></div>`;
+    renderState();
+    return;
+  }
+  if (!videos.length) {
+    hasMore = false;
+    infoEl.textContent = "暂无评论";
+    listEl.innerHTML = `<div class="c-empty"><span class="muted">尚未配置视频数据。</span></div>`;
+    renderState();
+    return;
+  }
+  const sel = $("videoSel");
+  sel.innerHTML = videos.map(v => `<option value="${esc(v.bvid)}">${esc(v.name)} [${esc(v.community || "")}]</option>`).join("");
+  const filters = new URLSearchParams(window.location.search);
+  sel.value = videos.some(v => v.bvid === filters.get("bvid")) ? filters.get("bvid") : videos[0].bvid;
+  const requestedCategory = filters.get("category");
+  curCat = CATS.includes(requestedCategory) ? requestedCategory : "all";
+  document.querySelectorAll(".filter-bar .f-cat").forEach(f => {
+    f.classList.toggle("on", f.dataset.c === curCat);
+    f.setAttribute("aria-pressed", String(f.dataset.c === curCat));
+  });
+  const requestedQuery = filters.get("q") || "";
+  $("searchBox").value = requestedQuery.split(/[\r\n]+/).map(line => line.trim()).reduce((longest, line) => line.length > longest.length ? line : longest, "");
+  await loadStrip();
+  ready = true;
+  reset();
+}
+
+document.querySelectorAll(".filter-bar .f-cat").forEach(f => f.onclick = () => applyCat(f.dataset.c));
+
+$("videoSel").onchange = () => { loadStrip(); reset(); };
+$("orderSel").onchange = () => reset();
+$("reloadB").onclick = () => { loadStrip(); reset(); };
+
+const searchBox = $("searchBox");
+searchBox.onkeydown = e => {
+  if (e.key === "Enter") { clearTimeout(searchTimer); reset(); }
+};
+searchBox.oninput = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(reset, 350);
+};
+
+stateEl.addEventListener("click", e => {
+  if (e.target.closest("[data-retry]")) {
+    errorMessage = "";
+    paused = false;
+    loadMore();
+  }
+});
+
+listEl.addEventListener("click", e => {
+  const cell = e.target.closest(".c-cell");
+  if (!cell) return;
+  const item = records[Number(cell.dataset.i)];
+  if (item) openDetail(item);
+});
+
+dialog.addEventListener("click", e => {
+  if (e.target.closest("[data-close]")) { dialog.close(); return; }
+  if (e.target === dialog) {
+    const r = dialog.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close();
+  }
+});
+
+setupInfinite();
+init();
+</script>
+<script src="/powang-demo/section-reveal.js" defer></script>
+</div>
+</body>
+</html>

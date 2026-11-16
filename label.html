@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<script src="/powang-demo/pages-runtime.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>破妄 · 标注与二次审查</title>
+<script src="theme.js"></script><script src="/powang-demo/count-format.js"></script>
+<link rel="stylesheet" href="base.css">
+<style>
+  .cat-pill { cursor:pointer; padding:10px 16px; border:2px solid var(--line); font-weight:900; font-size:var(--type-body); letter-spacing:2px; background:var(--surface); transition:transform .1s; }
+  .cat-pill:hover { transform:translate(-2px,-2px); box-shadow:3px 3px 0 var(--line); }
+  .cat-pill.sel.praise { background:var(--cat-praise); color:#fff; }
+  .cat-pill.sel.blame { background:var(--cat-blame); color:#fff; }
+  .cat-pill.sel.shui { background:var(--cat-shui); color:#0E1116; }
+  .cat-pill.sel.noise { background:var(--cat-noise); color:#fff; }
+  .cat-pill.sel.feud { background:var(--cat-feud); color:#fff; }
+  .cat-pill.sel.neutral { background:var(--cat-neutral); color:#fff; }
+  .comment-box { min-height:110px; padding:14px; border:2px solid var(--line); background:var(--paper);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px); background-size:28px 28px;
+    font-size:var(--type-lead); line-height:1.8; }
+  .mode-tabs { display:flex; gap:2px; margin:22px 0 18px; }
+  .mode-tab { padding:11px 20px; border:2px solid var(--line); font-weight:900; text-transform:uppercase; letter-spacing:2px; cursor:pointer; background:var(--surface); }
+  .mode-tab.active { background:var(--ink); color:var(--paper); }
+  html[data-theme="dark"] .mode-tab.active { color:#090B10; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:var(--type-small); }
+  .kv b { font-weight:900; }
+  .review-reason { font-size:var(--type-small); color:var(--muted); border-left:5px solid var(--cyan); padding:6px 12px; margin-top:8px; background:var(--paper); }
+  .toast { position:fixed; top:72px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:200;
+    background:var(--ink); color:var(--paper); padding:10px 20px; font-weight:900; letter-spacing:1px; font-size:var(--type-body);
+    border:2px solid var(--cyan); opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; }
+  html[data-theme="dark"] .toast { color:#090B10; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+<link rel="stylesheet" href="/powang-demo/governance.css">
+<link rel="stylesheet" href="/powang-demo/tools.css">
+<script src="/powang-demo/workspace.js" defer></script>
+<link rel="icon" href="/powang-demo/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/powang-demo/research.css">
+<script src="/powang-demo/research-core.js"></script>
+</head>
+<body class="tool-page workspace-page">
+<a class="skip-link" href="#main">跳至主要内容</a><div id="workspaceNav"></div><div class="app-workspace"><header class="app-topbar" id="workspaceTopbar"></header>
+
+<main class="wrap" id="main">
+  <div class="kicker">人工标注 · 模型复核</div>
+  <h1 class="display" style="font-size:var(--type-metric);margin-bottom:8px">人工示范与<span class="stroke">模型复核</span></h1>
+  <p class="muted mb-2">用少量人工示范统一圈层口径，再复核模型难例。把人力留给语境知识和研究判断，复核结果回到规则与立法研究。</p>
+
+  <ol class="research-route" aria-label="治理研究流程"><li><span>01 / 结构观察</span><small>看分类与时间变化</small></li><li><span>02 / 话术关联</span><small>找圈层词与相似表达</small></li><li><span>03 / 原文核对</span><small>查来源、语境与理由</small></li><li aria-current="step"><span>04 / 人工复核</span><small>把难例沉淀为示范</small></li></ol>
+  <h2 class="tool-section-title">建立示范，标注组织化刷评，让经验持续复用</h2>
+  <!-- 视频选择 + 进度 -->
+  <div class="card accent mb-2">
+    <span class="corner"></span>
+    <div class="flex-between" style="flex-wrap:wrap">
+      <div class="flex" style="flex-wrap:wrap">
+        <select aria-label="选择研究视频" id="videoSel" style="min-width:250px"></select>
+        <button class="btn yellow" id="btnMore">补充50条示范</button>
+        <span class="muted mono" id="progText"></span>
+      </div>
+      <div class="flex">
+        <button class="btn primary" id="btnAnalyze" disabled>按示范批量分类</button>
+        <span class="muted" id="analyzeHint" style="max-width:220px"></span>
+      </div>
+    </div>
+    <div class="progress mt"><i id="progFill" style="width:0%"></i></div>
+    <div class="flex-between mt small" style="flex-wrap:wrap">
+      <span class="muted">两视频各完成 <b class="mono" id="goalTxt">50</b> 条后可触发分析（建议目标 100 条）· 当前锚定集总数 <b class="mono" id="nAll">0</b> 条</span>
+      <span class="flex" style="gap:10px">
+        <span id="saveStatus" class="muted mono" style="opacity:.7">示范与复核记录保存在本地</span>
+        <button class="btn ghost" id="btnBackup" style="padding:6px 12px;font-size:var(--type-small)">导出示范集</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- 模式切换 -->
+  <div class="mode-tabs">
+    <button type="button" class="mode-tab active" data-mode="label" aria-pressed="true">① 建立人工示范</button>
+    <button type="button" class="mode-tab" data-mode="review" aria-pressed="false">② 复核模型分类</button>
+  </div>
+
+  <!-- 标注模式 -->
+  <section id="modeLabel">
+    <div class="grid-2" style="grid-template-columns:1fr auto">
+      <div class="card accent flat mb">
+        <div class="flex-between mb">
+          <span class="badge praise" id="qPos">0 / 0</span>
+          <span class="muted mono" id="qMeta"></span>
+        </div>
+        <div class="comment-box" id="qText">点击“补充50条示范”载入待标队列</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; justify-content:center; min-width:230px">
+        <button type="button" class="cat-pill praise" data-cat="赞美" aria-pressed="false">赞 美 <span style="font-size:var(--type-caption);opacity:.6;margin-left:8px" class="mono">[1]</span></button>
+        <button type="button" class="cat-pill blame" data-cat="贬低" aria-pressed="false">贬 低 <span style="font-size:var(--type-caption);opacity:.6;margin-left:8px" class="mono">[2]</span></button>
+        <button type="button" class="cat-pill shui" data-cat="水军" aria-pressed="false">组织化刷评 <span style="font-size:var(--type-caption);opacity:.6;margin-left:8px" class="mono">[3]</span></button>
+        <button type="button" class="cat-pill noise" data-cat="无意义" aria-pressed="false">无意义 <span style="font-size:var(--type-caption);opacity:.6;margin-left:8px" class="mono">[4]</span></button>
+        <button type="button" class="cat-pill feud" data-cat="社区对骂" aria-pressed="false">社区对骂 <span style="font-size:var(--type-caption);opacity:.6;margin-left:8px" class="mono">[5]</span></button>
+        <button type="button" class="cat-pill neutral" data-cat="中立" aria-pressed="false">中 立 <span style="font-size:var(--type-caption);opacity:.6;margin-left:8px" class="mono">[6]</span></button>
+        <div class="mt flex" style="gap:8px">
+          <button class="btn ghost" id="btnSkip">跳过 →</button>
+          <button class="btn primary" id="btnSubmit" disabled>提交 ✓</button>
+        </div>
+      </div>
+    </div>
+    <div class="muted small">快捷键：1/2/3/4/5/6 选择分类，↵ 提交。分类定义见本页说明。本次已标 <b class="mono" id="sessionCount">0</b> 条。</div>
+    <div class="muted small mt" style="line-height:1.9;border-top:1px solid var(--grid);padding-top:8px">
+      <b style="color:var(--cat-feud)">社区对骂</b>：评论者互相攻击、拉踩、站队对线，矛头指向其他用户或群体。
+      <b style="color:var(--cat-neutral)">中立</b>：客观陈述、提问求证、补充信息，没有明确褒贬情绪。
+    </div>
+  </section>
+
+  <!-- 审查模式 -->
+  <p class="tool-review-intro">组织化刷评：协调刷取、模板化控评与重复传播的话术特征。结合原文和圈层语境，按六分类直接标注。</p>
+  <section id="modeReview" style="display:none"><p class="tool-review-intro">对照原文与模型理由，确认或修正分类，将难例转成下一轮示范。</p>
+    <div class="flex mb" style="flex-wrap:wrap">
+      <select id="revCatSel" aria-label="筛选复核类别">
+        <option value="">全部类别</option><option value="赞美">赞美</option><option value="贬低">贬低</option>
+        <option value="水军">组织化刷评</option><option value="无意义">无意义</option>
+        <option value="社区对骂">社区对骂</option><option value="中立">中立</option>
+      </select>
+      <button class="btn cyan" id="btnRevLoad">加载审查队列</button>
+      <span class="muted" id="revInfo"></span>
+    </div>
+    <div class="card accent violet flat" id="revBox"><span class="muted">分析完成后，此处载入大模型判定结果供确认/修正。</span></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <span class="brand-name" style="font-size:var(--type-lead);letter-spacing:4px">破妄</span>
+  <span class="muted">保留分类依据 · 人工核验语境 · 记录复核意见</span>
+  <span style="flex:1"></span>
+  <div class="dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span><span class="d4"></span></div>
+</footer>
+<div id="toast" class="toast"></div>
+
+<script>
+let videos = [], queue = [], idx = 0, curCat = "";
+let revQueue = [], revIdx = 0;
+
+async function api(url, opts) { const r = await fetch(url, opts); const d = await r.json(); if (!d.success) throw new Error(d.error||"请求失败"); return d.data; }
+function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+// 备份下载锚定集
+document.getElementById("btnBackup").onclick = async () => {
+  try {
+    const d = await api("/api/anchors");
+    const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "anchors_backup_" + new Date().toISOString().slice(0,10) + ".json";
+    a.click();
+    toast("已导出备份到下载文件夹");
+  } catch (e) { toast("导出失败: " + e.message); }
+};
+
+async function loadVideos() {
+  const d = await api("/api/videos");
+  videos = d.videos;
+  const sel = document.getElementById("videoSel");
+  sel.innerHTML = videos.map(v => `<option value="${v.bvid}">${v.name} [${v.community||""}] ${esc(v.title||"")}</option>`).join("");
+  if (videos[0]) sel.value = videos[0].bvid;
+  sel.onchange = loadQueue;
+}
+
+async function loadAnchorsInfo() {
+  const d = await api("/api/anchors");
+  const by = d.count_per_video || {};
+  const bvid = document.getElementById("videoSel").value;
+  const nCur = by[bvid] || 0;
+  document.getElementById("nAll").textContent = window.ResearchNumbers.commentCount(d.count);
+  document.getElementById("progText").textContent = `本视频已标 ${window.ResearchNumbers.commentCount(nCur)} 条（触发线 50 / 目标 100）`;
+  document.getElementById("progFill").style.width = Math.min(100, (nCur/50)*100) + "%";
+  const ready = videos.every(v => (by[v.bvid]||0) >= 50);
+  document.getElementById("btnAnalyze").disabled = !ready;
+  document.getElementById("analyzeHint").textContent = ready ? "两视频均已达标，可开始分析" : "未达标：每视频需50条";
+}
+
+async function loadQueue() {
+  await loadAnchorsInfo();
+  const bvid = document.getElementById("videoSel").value;
+  const d = await api(`/api/label/queue?bvid=${bvid}&size=100`);
+  queue = d.items; idx = 0; curCat = "";
+  renderQueue();
+}
+
+function renderQueue() {
+  const box = document.getElementById("qText");
+  document.getElementById("qPos").textContent = `${idx+1} / ${queue.length}`;
+  if (!queue.length) {
+    box.textContent = "队列为空——点「补充50条示范」或已完成本视频目标。";
+    document.getElementById("btnSubmit").disabled = true;
+    return;
+  }
+  const it = queue[idx];
+  box.textContent = it.text;
+  document.getElementById("qMeta").textContent = `♥${it.like} · ${new Date(it.ctime*1000).toLocaleDateString()}`;
+  document.querySelectorAll("#modeLabel .cat-pill").forEach(p => { p.classList.toggle("sel", p.dataset.cat === curCat); p.setAttribute("aria-pressed", String(p.dataset.cat === curCat)); });
+  document.getElementById("btnSubmit").disabled = !curCat;
+}
+
+document.querySelectorAll("#modeLabel .cat-pill").forEach(p => p.onclick = () => { curCat = p.dataset.cat; renderQueue(); });
+document.getElementById("btnSubmit").onclick = async () => {
+  if (!queue.length || !curCat) return;
+  const it = queue[idx];
+  await api("/api/anchors", { method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ item:{ rpid:it.rpid, bvid:it.bvid, text:it.text, category:curCat } }) });
+  toast("✓ 已保存到本地 anchors.json");
+  curCat = ""; queue.splice(idx,1); if (idx >= queue.length) idx = 0;
+  const sc = document.getElementById("sessionCount");
+  sc.textContent = (parseInt(sc.textContent,10)||0) + 1;
+  loadQueue();
+};
+document.getElementById("btnSkip").onclick = () => { idx = Math.min(idx+1, Math.max(0,queue.length-1)); renderQueue(); };
+document.getElementById("btnMore").onclick = async () => {
+  const bvid = document.getElementById("videoSel").value;
+  const d = await api(`/api/label/queue?bvid=${bvid}&size=150`);
+  queue = d.items; idx = 0; renderQueue();
+};
+document.addEventListener("keydown", e => {
+  if (document.getElementById("modeLabel").style.display === "none" || e.target.matches("input, textarea, select, button")) return;
+  const map = { "1":"赞美","2":"贬低","3":"水军","4":"无意义","5":"社区对骂","6":"中立" };
+  if (map[e.key]) { curCat = map[e.key]; renderQueue(); }
+  else if (e.key === "Enter" && curCat) document.getElementById("btnSubmit").click();
+});
+
+/* 模式切换 */
+document.querySelectorAll(".mode-tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".mode-tab").forEach(x => { x.classList.remove("active"); x.setAttribute("aria-pressed", "false"); });
+  t.classList.add("active"); t.setAttribute("aria-pressed", "true");
+  document.getElementById("modeLabel").style.display = t.dataset.mode==="label" ? "" : "none";
+  document.getElementById("modeReview").style.display = t.dataset.mode==="review" ? "" : "none";
+});
+
+/* 二次审查 */
+document.getElementById("btnRevLoad").onclick = loadReview;
+async function loadReview() {
+  const bvid = document.getElementById("videoSel").value;
+  const cat = document.getElementById("revCatSel").value;
+  try {
+    const d = await api(`/api/review/queue?bvid=${bvid}&category=${cat}&size=50`);
+    revQueue = d.items; revIdx = 0;
+    document.getElementById("revInfo").textContent = `待审 ${window.ResearchNumbers.commentCount(d.total)} 条，本次载入 ${window.ResearchNumbers.commentCount(revQueue.length)}`;
+    renderReview();
+  } catch (e) {
+    document.getElementById("revBox").innerHTML = `<span style="color:var(--cat-blame)">${esc(e.message)}</span>`;
+  }
+}
+function renderReview() {
+  const box = document.getElementById("revBox");
+  if (!revQueue.length) { box.innerHTML = '<span class="muted">审查队列为空（可能尚未分析或已审完）。</span>'; return; }
+  const it = revQueue[revIdx];
+  const CLS = { "赞美":"praise","贬低":"blame","水军":"shui","无意义":"noise","社区对骂":"feud","中立":"neutral" };
+  box.innerHTML = `
+    <div class="flex-between mb" style="flex-wrap:wrap">
+      <span class="muted mono">${revIdx+1} / ${window.ResearchNumbers.commentCount(revQueue.length)}</span>
+      <span>模型判定 <span class="badge ${CLS[it.model_category]}">${ResearchUI.categoryLabel(it.model_category)}</span>
+      <span class="muted mono">置信 ${(it.confidence*100).toFixed(0)}%</span></span>
+    </div>
+    <div class="comment-box">${esc(it.text)}</div>
+    <div class="review-reason">模型理由：${esc(it.reason)}</div>
+    <div class="flex mt" style="gap:8px; flex-wrap:wrap">
+      <button type="button" class="cat-pill praise" data-r="赞美" aria-pressed="false">赞美</button>
+      <button type="button" class="cat-pill blame" data-r="贬低" aria-pressed="false">贬低</button>
+      <button type="button" class="cat-pill shui" data-r="水军" aria-pressed="false">组织化刷评</button>
+      <button type="button" class="cat-pill noise" data-r="无意义" aria-pressed="false">无意义</button>
+      <button type="button" class="cat-pill feud" data-r="社区对骂" aria-pressed="false">社区对骂</button>
+      <button type="button" class="cat-pill neutral" data-r="中立" aria-pressed="false">中立</button>
+      <span class="muted small" style="align-self:center">不选则视为确认模型判定</span>
+    </div>
+    <div class="flex mt-2">
+      <button class="btn ghost" id="revNext">下一跳 →</button>
+      <button class="btn primary" id="revSubmit">确认 / 提交修正 ✓</button>
+    </div>`;
+  let selCat = "";
+  box.querySelectorAll(".cat-pill").forEach(p => p.onclick = () => {
+    box.querySelectorAll(".cat-pill").forEach(x => { x.classList.remove("sel"); x.setAttribute("aria-pressed", "false"); });
+    p.classList.add("sel"); p.setAttribute("aria-pressed", "true"); selCat = p.dataset.r;
+  });
+  document.getElementById("revNext").onclick = () => { revIdx = Math.min(revIdx+1, revQueue.length-1); renderReview(); };
+  document.getElementById("revSubmit").onclick = async () => {
+    const final = selCat || it.model_category;
+    await api("/api/review", { method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ item:{ rpid:it.rpid, bvid:document.getElementById("videoSel").value, text:it.text,
+        model_category:it.model_category, final_category:final } }) });
+    toast("✓ 审查结果已保存到本地 anchors.json");
+    revQueue.splice(revIdx,1); if (revIdx >= revQueue.length) revIdx = 0;
+    loadAnchorsInfo(); renderReview();
+  };
+}
+
+/* 触发分析 */
+document.getElementById("btnAnalyze").onclick = async () => {
+  const bvid = document.getElementById("videoSel").value;
+  const btn = document.getElementById("btnAnalyze");
+  btn.disabled = true; btn.textContent = "⏳ 分析中...";
+  document.getElementById("analyzeHint").textContent = "后台分析全量评论中，可离开此页";
+  try {
+    await api("/api/analyze", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ bvid }) });
+    poll(bvid, btn);
+  } catch (e) { alert("触发失败：" + e.message); btn.disabled=false; btn.textContent="按示范批量分类"; }
+};
+function poll(bvid, btn) {
+  const t = setInterval(async () => {
+    try {
+      const d = await api(`/api/analyze/status?bvid=${bvid}`);
+      if (d.status === "done") {
+        clearInterval(t);
+        btn.disabled = false; btn.textContent = "按示范批量分类";
+        document.getElementById("analyzeHint").textContent = `完成！共${window.ResearchNumbers.commentCount(d.total)}条`;
+        loadAnchorsInfo();
+      } else if (d.status === "running") {
+        const pct = d.total ? Math.round(100 * (d.done || 0) / d.total) : 0;
+        document.getElementById("analyzeHint").textContent = `分析中 ${window.ResearchNumbers.commentCount(d.done || 0)}/${d.total ? window.ResearchNumbers.commentCount(d.total) : "?"} 条 (${pct}%)，可离开此页`;
+      } else if (d.status === "error") {
+        clearInterval(t);
+        btn.disabled = false; btn.textContent = "按示范批量分类";
+        document.getElementById("analyzeHint").textContent = "分析失败：" + (d.error || "未知错误");
+      }
+    } catch(e){}
+  }, 3000);
+}
+
+loadVideos().then(loadQueue);
+</script>
+<script src="/powang-demo/section-reveal.js" defer></script>
+</div>
+</body>
+</html>

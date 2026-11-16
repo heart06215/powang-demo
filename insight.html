@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<script src="/powang-demo/pages-runtime.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>破妄 · 社区洞察与证据关系图谱</title>
+<link rel="icon" href="/powang-demo/mark.svg" type="image/svg+xml">
+<script src="theme.js"></script><script src="/powang-demo/count-format.js"></script><script src="/powang-demo/brain-layout.js"></script>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="/powang-demo/insight.css">
+<link rel="stylesheet" href="/powang-demo/governance.css">
+<link rel="stylesheet" href="/powang-demo/tools.css">
+<script src="/powang-demo/workspace.js" defer></script>
+<link rel="stylesheet" href="/powang-demo/research.css">
+<script src="/powang-demo/research-core.js"></script>
+<script src="/powang-demo/research-dashboard.js" defer></script>
+</head>
+<body class="tool-page workspace-page"><a class="skip-link" href="#main">跳至主要内容</a><div id="workspaceNav"></div><div class="app-workspace"><header class="app-topbar" id="workspaceTopbar"></header><main id="main"><div data-research-ticker></div><div class="wrap"><div class="kicker">社区结构 · 话术关联</div><h1 class="display" style="font-size:var(--type-display)">社区结构与治理线索</h1><p class="tool-intro mt">先看分类结构，再找话术关联，回到原文与人工复核，分析报告与证据数据集可导出，供二次审查与立法研究使用。</p>  <ol class="research-route" aria-label="治理研究流程"><li aria-current="step"><span>01 / 结构观察</span><small>看分类与时间变化</small></li><li><span>02 / 话术关联</span><small>找圈层词与相似表达</small></li><li><span>03 / 原文核对</span><small>查来源、语境与理由</small></li><li><span>04 / 报告导出</span><small>导出报告与证据数据集</small></li></ol><div class="sec-head" id="insight"><span class="sec-num">01</span><span class="sec-title">先看结构：哪些表达值得追踪</span><span class="sec-rule"></span></div>
+  <p class="muted mb-2">比较两社区的分类、时间变化与圈层词汇，定位需要核验的表达。以下为模型分类统计。</p>
+
+  <div class="tabs mb-2" id="videoTabs"></div>
+  <div id="summary" class="muted mb-2" style="display:flex;gap:20px;flex-wrap:wrap;font-size:var(--type-small)"></div>
+
+  <!-- 对比模式 -->
+  <div id="cmpBox" class="cmp-block" style="display:none">
+    <div class="cmp-head"><span style="background:var(--pink);color:#fff;padding:2px 10px">饭圈·演艺圈</span> VS <span style="background:var(--blue);color:#fff;padding:2px 10px">二游·游戏圈</span><span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">六分类情感结构对照</span></div>
+    <div style="padding:16px 18px;overflow-x:auto">
+      <h3 style="font-size:var(--type-body);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">同表直比 · 数量与占比</h3>
+      <table id="cmpTable" style="min-width:720px"></table>
+    </div>
+    <div class="cmp-cols" id="cmpCols"></div>
+    <div style="padding:14px 18px;border-top:3px solid var(--line)">
+      <h3 style="font-size:var(--type-body);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">占比差异对照(%)</h3>
+      <div class="chart" id="cmpDiff" style="height:320px"></div>
+    </div>
+    <div class="grid-2" style="border-top:3px solid var(--line)">
+      <div style="padding:14px 18px">
+        <h3 style="font-size:var(--type-body);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">分类结构雷达</h3>
+        <div class="chart" id="cmpRadar" style="height:340px"></div>
+      </div>
+      <div style="padding:14px 18px">
+        <h3 style="font-size:var(--type-body);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">分类差异摘要</h3>
+        <div id="cmpInsight" class="small" style="line-height:2;font-size:var(--type-body)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 单视频 -->
+  <div id="singleBox">
+    <div class="stat-grid grid-6 mb-2" id="overview"></div>
+    <div class="grid-2">
+      <div class="chart-card"><h3><i style="background:var(--cat-praise)"></i>六分类占比</h3><div class="chart" id="pie1"></div></div>
+      <div class="chart-card"><h3><i style="background:var(--cat-blame)"></i>各分类样本量</h3><div class="chart" id="bar1"></div></div>
+    </div>
+    <div class="chart-card"><h3><i style="background:var(--cat-shui)"></i>时间趋势 · 按月堆叠</h3><div class="chart tall" id="trend1"></div></div>
+    <div class="chart-card"><h3><i style="background:var(--cyan)"></i>高频网络用语 TOP15</h3><div class="chart tall" id="slangbar1"></div></div>
+    <div class="chart-card"><h3><i style="background:var(--blue)"></i>代表性评论</h3><div class="rep-grid" id="rep1"></div></div>
+  </div>
+
+</div>
+
+<section class="wrap evaluation-workspace" id="evaluation" data-evaluation-dashboard aria-label="三档方法测试与微调报告"></section>
+
+<!-- 全屏关系图谱 -->
+<section class="graph-full" id="graphFull">
+  <span class="gf-grid-bg"></span>
+  <!-- 横向控制面板：标题 / 筛选 / 规模 / 图例，四列铺在图谱上方 -->
+  <div class="gf-head">
+    <div class="gf-col gf-col-main">
+      <div class="gf-kicker">02 · RELATIONSHIP NETWORK</div>
+      <h2 class="gf-title">双半球语义图谱</h2>
+      <p class="gf-sub">两个视频形成双半球，圈层词条连接相近评论。定位节点、核对来源，再把难例交给人工复核。</p>
+    </div>
+
+    <div class="gf-col gf-col-filter">
+      <div class="gf-block-h"><span>视频筛选</span><span id="gfRailCount">—</span></div>
+      <div class="gf-chips" id="gfChips"></div>
+      <form class="gf-search" id="gfSearchForm">
+        <input id="gfSearch" aria-label="搜索图谱词条、视频或评论" placeholder="搜词条 / 视频 / 评论" maxlength="40" autocomplete="off">
+        <button type="submit">定位</button>
+      </form>
+      <div class="gf-block-h gf-subhead"><span>高频词 TOP 5</span><span>点击定位</span></div>
+      <div class="gf-top" id="gfTop"></div>
+    </div>
+
+    <div class="gf-col gf-col-scale">
+      <div class="gf-block-h"><span>图谱规模</span><span>采集样本</span></div>
+      <div class="gf-metrics" id="gfMetrics"></div>
+      <div class="gf-layers" id="gfLayers">
+        <button type="button" class="gf-layer on" data-layer="comment">评论节点</button>
+        <button type="button" class="gf-layer on" data-layer="sim">相似边</button>
+        <button type="button" class="gf-layer on" data-layer="mention">提及边</button>
+      </div>
+      <div class="gf-verify" id="gfVerify"></div>
+    </div>
+
+    <div class="gf-col gf-col-legend">
+      <div class="gf-block-h"><span>图例</span><span>LEGEND</span></div>
+      <div class="gf-legend">
+        <span><i style="background:var(--cat-praise)"></i>赞美</span>
+        <span><i style="background:var(--cat-blame)"></i>贬低</span>
+        <span><i style="background:var(--cat-shui);border:1px solid var(--line)"></i>组织化刷评</span>
+        <span><i style="background:var(--cat-noise)"></i>无意义</span>
+        <span><i style="background:var(--cat-feud)"></i>社区对骂</span>
+        <span><i style="background:var(--cat-neutral)"></i>中立</span>
+        <span><i style="background:linear-gradient(90deg,var(--blue) 0 50%,var(--pink) 50% 100%);border-radius:50%"></i>评论节点（颜色=分类/视频）</span>
+        <span><span class="ln"></span>语料共现</span>
+        <span><span class="ln dot"></span>文本相似（Jaccard）</span>
+        <span><span class="ln mention"></span>评论提及词条</span>
+        <em>节点越大 = 点赞/命中越高 · 右上角可开关图层</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="gf-stage">
+      <div class="gf-chart" id="gfChart"></div>
+      <div class="gf-foot">
+        <div class="gf-hint">滚轮缩放 · 空白处按住拖拽平移 · 点击节点查看释义</div>
+        <div class="gf-stat mono" id="gfStat">LOADING…</div>
+      </div>
+      <aside class="gf-panel" id="gfPanel">
+        <button class="gf-close" id="gfClose" type="button" aria-label="关闭">×</button>
+        <div class="gf-kind" id="gfPanelKind"></div>
+        <h3 id="gfPanelTitle"></h3>
+        <div id="gfPanelBody"></div>
+      </aside>
+    </div>
+</section>
+
+<div class="wrap" id="qa" style="padding-top:48px">
+  <!-- 问答 -->
+  <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">把发现转成研究问题</span><span class="sec-rule"></span></div>
+  <p class="muted mb-2">围绕分类差异、圈层用语与证据不足处提问，整理后续核验清单。</p>
+  <div class="chat-layout">
+    <aside class="side">
+      <h3>数据快照</h3>
+      <div id="chatSnap"><span class="muted">加载中...</span></div>
+      <h3>试试这样问</h3>
+      <div id="chatHintList" class="muted small" style="line-height:2.05">
+        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 这个视频的赞美占比是多少？</div>
+        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 如何核验疑似刷评线索？</div>
+        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 饭圈和二游的贬低比例对比如何？</div>
+        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 社区对骂主要集中在哪里？</div>
+        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 有哪些代表性的中立评论？</div>
+        <div class="hint-q" style="cursor:pointer;padding:3px 0">· "砌墙"是什么意思？</div>
+      </div>
+      <h3>工具箱</h3>
+      <div class="muted small">统计查询 · 时间趋势 · 热词排行 · 代表评论 · 双社区对比 · 网络用语RAG检索</div>
+    </aside>
+    <div class="chat-main">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="chat-input">
+        <input id="chatQ" aria-label="向研究助手提问" placeholder="输入需要核验的治理研究问题" onkeydown="if(event.key==='Enter')chatSend()">
+        <button class="btn primary" id="chatSendB" onclick="chatSend()">发送 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" style="padding-top:0">
+  <!-- 方法论 -->
+  <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">方法论流水线</span><span class="sec-rule"></span></div>
+  <div class="grid-4">
+    <div class="card flat step"><span class="num">01</span><h3 class="mt">数据采集</h3><p class="muted small mt">B站评论多策略分层采样：时间正序×热度×子评论，覆盖全时间线。</p></div>
+    <div class="card flat step"><span class="num">02</span><h3 class="mt">锚定集</h3><p class="muted small mt">人工精标锚定样本作六分类依赖模板，二次审查确认后扩充。</p></div>
+    <div class="card flat step"><span class="num">03</span><h3 class="mt">标注增强与评测</h3><p class="muted small mt">网络用语知识检索注入；金标与预标数据导出，支持微调及后续评估。</p></div>
+    <div class="card flat step"><span class="num">04</span><h3 class="mt">洞察看板</h3><p class="muted small mt">六分类占比、趋势、双社区对比、态度关系图与 AI 问答，一页读完。</p></div>
+  </div>
+</div>
+
+</main><footer class="footer">
+  <span class="brand-name" style="font-size:var(--type-lead);letter-spacing:4px">破妄</span>
+  <span class="muted">基于微调大模型的对互联网社区的评论情感分析软件 · 人工智能应用创新大赛</span>
+  <span style="flex:1"></span>
+  <div class="dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span><span class="d4"></span></div>
+</footer>
+
+<script src="/powang-demo/insight-graph.js" defer></script>
+
+<script src="/powang-demo/insight-dashboard.js" defer></script>
+
+<script src="/powang-demo/insight-chat.js" defer></script>
+<script src="/powang-demo/section-reveal.js" defer></script>
+</div>
+</body>
+</html>
