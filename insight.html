@@ -20,12 +20,12 @@
   <p class="muted mb-2">比较两社区的分类、时间变化与圈层词汇，定位需要核验的表达。以下为模型分类统计。</p>
 
   <div class="tabs mb-2" id="videoTabs"></div>
-  <div id="summary" class="muted mb-2" style="display:flex;gap:20px;flex-wrap:wrap;font-size:var(--type-small)"></div>
+  <div id="summary" class="video-summary muted mb-2"></div>
 
   <!-- 对比模式 -->
   <div id="cmpBox" class="cmp-block" style="display:none">
     <div class="cmp-head"><span style="background:var(--pink);color:#fff;padding:2px 10px">饭圈·演艺圈</span> VS <span style="background:var(--blue);color:#fff;padding:2px 10px">二游·游戏圈</span><span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">六分类情感结构对照</span></div>
-    <div style="padding:16px 18px;overflow-x:auto">
+    <div class="comparison-table-wrap" tabindex="0" role="region" aria-label="双社区数量与占比对照表" style="padding:16px 18px;overflow-x:auto">
       <h3 style="font-size:var(--type-body);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">同表直比 · 数量与占比</h3>
       <table id="cmpTable" style="min-width:720px"></table>
     </div>
@@ -161,7 +161,7 @@
 <div class="wrap" style="padding-top:0">
   <!-- 方法论 -->
   <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">方法论流水线</span><span class="sec-rule"></span></div>
-  <div class="grid-4">
+  <div class="grid-4 methodology-steps">
     <div class="card flat step"><span class="num">01</span><h3 class="mt">数据采集</h3><p class="muted small mt">B站评论多策略分层采样：时间正序×热度×子评论，覆盖全时间线。</p></div>
     <div class="card flat step"><span class="num">02</span><h3 class="mt">锚定集</h3><p class="muted small mt">人工精标锚定样本作六分类依赖模板，二次审查确认后扩充。</p></div>
     <div class="card flat step"><span class="num">03</span><h3 class="mt">标注增强与评测</h3><p class="muted small mt">网络用语知识检索注入；金标与预标数据导出，支持微调及后续评估。</p></div>

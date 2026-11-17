@@ -11,6 +11,15 @@ function dbCatColor(name) {
            "社区对骂": c.feud, "中立": c.neutral }[name] || c.muted;
 }
 function dbClean() { dbCharts.forEach(c => { try { c.dispose(); } catch (e) {} }); dbCharts = []; }
+/** @returns {void} */
+function dbResizeCharts() {
+  dbCharts.forEach(chart => {
+    chart.resize();
+    if (chart.getDom().id === "cmpDiff") {
+      chart.setOption({ xAxis: { axisLabel: { rotate: chart.getWidth() < 500 ? 40 : 0 } } });
+    }
+  });
+}
 function dbMk(id) {
   const el = document.getElementById(id);
   if (!el || typeof echarts === "undefined") return null;
@@ -81,15 +90,16 @@ async function dbSelect(b) {
   }
 }
 
+/** @param {string} b @returns {void} */
 function dbRenderSummary(b) {
   const s = document.getElementById("summary");
   if (b === "__cmp__") {
-    s.innerHTML = `<span>左<b style="color:var(--cat-blame)">饭圈(TF家族音乐会)</b> · 右<b style="color:var(--cat-praise)">二游(明日方舟PV)</b></span><span>观察「组织化刷评」「玩梗盖楼」「控评夸赞」「社区对骂」的社区差异</span>`;
+    s.innerHTML = `<span class="comparison-summary">左 <b style="color:var(--cat-blame)">饭圈(TF家族音乐会)</b> · 右 <b style="color:var(--cat-praise)">二游(明日方舟PV)</b></span><span class="comparison-summary">观察「组织化刷评」「玩梗盖楼」「控评夸赞」「社区对骂」的社区差异</span>`;
     return;
   }
   const v = dbVideos.find(x => x.bvid === b);
   if (!v) return;
-  s.innerHTML = `<span><b>视频</b> ${dbEsc(v.title || "")}</span><span><b>UP主</b> ${dbEsc(v.owner || "")}</span><span><b>全站评论</b> ${window.ResearchNumbers.commentCount(v.reply_count)}</span><span><b>样本</b> ${window.ResearchNumbers.commentCount(v.corpus_count)}条</span><span><b>社区</b> ${dbEsc(v.community_full || v.community || "")}</span>`;
+  s.innerHTML = `<span class="video-meta video-meta-title"><b>视频</b><span>${dbEsc(v.title || v.name || "")}</span></span>${v.owner ? `<span class="video-meta"><b>UP主</b><span>${dbEsc(v.owner)}</span></span>` : ""}<span class="video-meta"><b>全站评论</b><span>${window.ResearchNumbers.commentCount(v.reply_count)}</span></span><span class="video-meta"><b>样本</b><span>${window.ResearchNumbers.commentCount(v.corpus_count)} 条</span></span><span class="video-meta"><b>社区</b><span>${dbEsc(v.community_full || v.community || "")}</span></span>`;
 }
 
 /* ---------- 单视频 ---------- */
@@ -129,9 +139,10 @@ function dbDrawPie(cs) {
       data: DB_CATS.map(n => ({ name: ResearchUI.categoryLabel(n), value: cs[n] || 0, itemStyle: { color: dbCatColor(n) } })) }]
   });
 }
+/** @param {Record<string, number>} cs @returns {void} */
 function dbDrawBar(cs) {
   const b = dbMk("bar1"); if (!b) return;
-  b.setOption({ tooltip: {}, grid: { left: 82, right: 50, bottom: 40, top: 12 },
+  b.setOption({ tooltip: {}, grid: { left: 8, right: 48, bottom: 16, top: 12, containLabel: true },
     xAxis: { type: "value", splitNumber: 2, ...dbBaseAxis() },
     yAxis: { type: "category", inverse: true, data: DB_CATS.map(ResearchUI.categoryLabel), ...dbBaseAxis(), axisLabel: { color: dbC().ink, interval: 0, fontSize: 18 } },
     series: [{ type: "bar", barWidth: "52%", label: { show: true, position: "right", color: dbC().ink, fontSize: 18 }, data: DB_CATS.map(n => ({ value: cs[n] || 0, itemStyle: { color: dbCatColor(n) } })) }] });
@@ -157,6 +168,7 @@ function dbDrawSlangBar(words) {
       label: { show: true, position: "right", color: dbC().muted, fontSize: 16 } }] });
 }
 /* ---------- 对比 ---------- */
+/** @returns {void} */
 function dbRenderCompare() {
   const FANv = dbVideos.find(v => v.community === "饭圈") || dbVideos[1];
   const GAMv = dbVideos.find(v => v.community === "二游") || dbVideos[0];
@@ -194,24 +206,25 @@ function dbRenderCompare() {
   document.getElementById("cmpCols").innerHTML = [FAN, GAME].map(o => {
     const total = DB_CATS.reduce((s, c) => s + (o.cs[c] || 0), 0) || 1;
     return `<div class="cmp-col">
-      <div class="flex-between mb"><span style="font-size:var(--type-section);font-weight:900;color:${o.meta.community === "饭圈" ? dbC().pink : dbC().blue}">${o.meta.community || ""} <span class="muted" style="font-size:var(--type-small)">${dbEsc(o.meta.name || "")}</span></span>
+      <div class="cmp-col-heading mb"><div class="cmp-community"><strong style="color:${o.meta.community === "饭圈" ? dbC().pink : dbC().blue}">${dbEsc(o.meta.community || "")}</strong><span class="muted">${dbEsc(o.meta.name || "")}</span></div>
       <span class="badge">样本 ${total}</span></div>
-      ${DB_CATS.map(c => { const n = o.cs[c] || 0, p = ((n / total) * 100).toFixed(1); return `<div class="bar-row"><span style="width:72px;font-weight:900;color:${dbCatColor(c)}">${ResearchUI.categoryLabel(c)}</span><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${dbCatColor(c)}"></div></div><span style="width:96px;text-align:right" class="mono">${n} · ${p}%</span></div>`; }).join("")}
+      ${DB_CATS.map(c => { const n = o.cs[c] || 0, p = ((n / total) * 100).toFixed(1); return `<div class="bar-row"><span class="cmp-category" style="color:${dbCatColor(c)}">${ResearchUI.categoryLabel(c)}</span><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${dbCatColor(c)}"></div></div><span class="cmp-value mono">${n} · ${p}%</span></div>`; }).join("")}
     </div>`;
   }).join("");
 
   const diff = dbMk("cmpDiff");
   if (diff) diff.setOption({ tooltip: { trigger: "axis", valueFormatter: v => v + "%" },
     legend: { data: [fanName, gameName], textStyle: { color: dbC().ink } },
-    grid: { left: 46, right: 24, bottom: 50, top: 40 },
-    xAxis: { type: "category", data: DB_CATS.map(ResearchUI.categoryLabel), ...dbBaseAxis(), axisLabel: { color: dbC().muted, interval: 0, fontSize: 16 } },
+    grid: { left: 8, right: 16, bottom: 12, top: 48, containLabel: true },
+    xAxis: { type: "category", data: DB_CATS.map(ResearchUI.categoryLabel), ...dbBaseAxis(), axisLabel: { color: dbC().muted, interval: 0, fontSize: 16, lineHeight: 22,
+      rotate: document.getElementById("cmpDiff").clientWidth < 500 ? 40 : 0 } },
     yAxis: { type: "value", name: "%", ...dbBaseAxis() },
     series: [
       { name: fanName, type: "bar", barWidth: "30%", itemStyle: { color: dbC().pink },
-        label: { show: true, position: "top", color: dbC().ink, formatter: "{c}%" },
+        label: { show: true, hideOverlap: true, position: "top", color: dbC().ink, formatter: "{c}%" },
         data: DB_CATS.map(c => +(((FAN.cs[c] || 0) / tF) * 100).toFixed(1)) },
       { name: gameName, type: "bar", barWidth: "30%", itemStyle: { color: dbC().blue },
-        label: { show: true, position: "top", color: dbC().ink, formatter: "{c}%" },
+        label: { show: true, hideOverlap: true, position: "top", color: dbC().ink, formatter: "{c}%" },
         data: DB_CATS.map(c => +(((GAME.cs[c] || 0) / tG) * 100).toFixed(1)) }
     ] });
 
@@ -222,7 +235,9 @@ function dbRenderCompare() {
       tooltip: {},
       legend: { data: [fanName, gameName], textStyle: { color: dbC().ink } },
       radar: { indicator: DB_CATS.map(c => ({ name: ResearchUI.categoryLabel(c), max: +maxP.toFixed(1) })),
-        axisName: { color: dbC().ink, fontWeight: "bold" },
+        center: ["50%", "55%"], radius: "52%", nameGap: 8,
+        axisName: { color: dbC().ink, fontWeight: "bold", fontSize: 16,
+          formatter: value => document.getElementById("cmpRadar").clientWidth < 500 ? ({ "组织化刷评": "组织化\n刷评", "社区对骂": "社区\n对骂" }[value] || value) : value },
         splitLine: { lineStyle: { color: dbC().grid } }, splitArea: { show: false },
         axisLine: { lineStyle: { color: dbC().grid } } },
       series: [{ type: "radar", data: [

@@ -623,7 +623,7 @@ window.addEventListener("themechange", () => {
 });
 let gfResizeTimer = null;
 window.addEventListener("resize", () => {
-  dbCharts.forEach(c => c.resize());
+  dbResizeCharts();
   if (!gfChart) return;
   clearTimeout(gfResizeTimer);
   gfResizeTimer = setTimeout(() => {

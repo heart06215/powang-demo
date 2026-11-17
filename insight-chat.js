@@ -2,6 +2,7 @@
 async function chatApi(url, opts) { return ResearchUI.request(url, opts); }
 function chatEsc(s) { return (s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
+/** @returns {Promise<void>} */
 async function chatLoadSnap() {
   try {
     const d = await chatApi("/api/videos");
@@ -9,9 +10,9 @@ async function chatLoadSnap() {
     const map = { "赞美": c.praise, "贬低": c.blame, "水军": c.shui, "无意义": c.noise, "社区对骂": c.feud, "中立": c.neutral };
     document.getElementById("chatSnap").innerHTML = d.videos.map(v => {
       const cs = v.analysis || {};
-      const line = Object.keys(map).map(n => `<span style="font-weight:900;color:${map[n]}">${cs[n] || 0}</span>`).join(" / ");
-      return `<div style="margin-bottom:12px"><b style="letter-spacing:1px">${chatEsc(v.name)} <span class="badge praise" style="${v.community === "饭圈" ? "background:var(--cat-blame)" : ""}">${chatEsc(v.community || "")}</span></b>
-        <div class="small muted mt" style="margin-top:4px">${v.analyzed ? line : "未分析"}</div></div>`;
+      const line = Object.keys(map).map(n => `<div><dt>${ResearchUI.categoryLabel(n)}</dt><dd style="color:${map[n]}">${cs[n] || 0}</dd></div>`).join("");
+      return `<div class="snapshot-card"><div class="snapshot-heading"><b>${chatEsc(v.name)}</b><span class="badge praise" style="${v.community === "饭圈" ? "background:var(--cat-blame)" : ""}">${chatEsc(v.community || "")}</span></div>
+        ${v.analyzed ? `<dl class="snapshot-metrics">${line}</dl>` : '<p class="small muted mt">未分析</p>'}</div>`;
     }).join("");
   } catch (e) {}
 }
