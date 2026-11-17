@@ -18,7 +18,6 @@
   const tasks = new Set();
   const queue = [];
   const entering = new Map();
-  const timers = new Set();
   let frame = 0;
   let colorSeed = 0;
   const maxTasks = compact.matches ? 2 : 5;
@@ -50,8 +49,6 @@
   function clear() {
     cancelAnimationFrame(frame);
     frame = 0;
-    for (const timer of timers) clearTimeout(timer);
-    timers.clear();
     queue.length = 0;
     for (const task of [...tasks]) drop(task);
     tasks.clear();
@@ -77,7 +74,13 @@
   function pump() {
     while (tasks.size < maxTasks && queue.length) {
       const next = queue.shift();
-      begin(next.element, next.start);
+      const rect = next.element.getBoundingClientRect();
+      if (!next.element.isConnected) continue;
+      if (rect.bottom < 68 || rect.top > window.innerHeight) {
+        observer.observe(next.element);
+        continue;
+      }
+      begin(next.element, Math.max(next.start, performance.now()));
     }
   }
 
@@ -91,6 +94,11 @@
   function begin(element, start) {
     if (!element.isConnected) return;
     const rect = element.getBoundingClientRect();
+    // Queued cards stay readable; start their reveal only when a cursor is free.
+    if (!element.contains(document.activeElement)) {
+      element.classList.add("swarm-build");
+      entering.set(element, start);
+    }
     const outline = document.createElement("span");
     outline.className = "swarm-outline";
     outline.style.width = `${rect.width}px`;
@@ -148,15 +156,8 @@
   /** @param {HTMLElement} element @param {number} start @returns {void} */
   function reveal(element, start) {
     if (element.contains(document.activeElement)) return;
-    // Long lists would otherwise hide hundreds of cards before the queue reaches them.
-    if (tasks.size + entering.size >= maxTasks) return;
-    element.classList.add("swarm-build");
-    entering.set(element, start);
-    if (!frame) frame = requestAnimationFrame(draw);
     queue.push({ element, start });
     pump();
-    const timer = setTimeout(() => { finish(element); timers.delete(timer); }, 1100);
-    timers.add(timer);
   }
 
   const observer = new IntersectionObserver((entries) => {
@@ -229,6 +230,7 @@
       ".list-bar",
       ".c-grid > *"
     ],
+    workbench: [".workbench-main h1", ".workbench-intro", ".workbench-card"],
     label: [
       "main .kicker",
       "main h1.display",
@@ -269,14 +271,12 @@
       ".grid-4 > .card"
     ]
   };
-  const page = location.pathname.startsWith("/comments") ? "comments"
-    : location.pathname.startsWith("/label") ? "label"
-    : location.pathname === "/" ? "home" : "insight";
+  const page = document.body.dataset.researchPage || "home";
   const selector = selectors[page].join(",");
   const seen = new WeakSet();
   document.querySelectorAll(selector).forEach((target) => {
     seen.add(target);
-    if (target.getBoundingClientRect().top >= window.innerHeight) observer.observe(target);
+    if (target.getBoundingClientRect().bottom >= 68) observer.observe(target);
   });
 
   // Tool pages render their tables and reports after the first paint.

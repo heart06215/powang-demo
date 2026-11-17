@@ -1,4 +1,4 @@
-/* 破妄 · 主题切换(日/夜) —— 需在<head>最早引入，避免闪屏 */
+/* 澄明 · 主题切换(日/夜) —— 需在<head>最早引入，避免闪屏 */
 (function () {
   const KEY = "powang-theme";
   let saved;

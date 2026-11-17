@@ -13,7 +13,7 @@ function dbCatColor(name) {
 function dbClean() { dbCharts.forEach(c => { try { c.dispose(); } catch (e) {} }); dbCharts = []; }
 function dbMk(id) {
   const el = document.getElementById(id);
-  if (!el) return null;
+  if (!el || typeof echarts === "undefined") return null;
   const chart = echarts.init(el);
   chart.setOption({ textStyle: { fontFamily: chartNumberFont, fontSize: 18 } });
   dbCharts.push(chart);
@@ -53,7 +53,8 @@ async function dbInit() {
   }
 }
 
-function dbSelect(b) {
+/** @param {string} b @returns {Promise<void>} */
+async function dbSelect(b) {
   document.querySelectorAll("#videoTabs .tab").forEach(t => t.classList.toggle("active", t.dataset.b === b));
   dbCur = b;
   const isCmp = b === "__cmp__";
@@ -62,6 +63,21 @@ function dbSelect(b) {
   dbClean();
   dbRenderSummary(b);
   if (isCmp) dbRenderCompare(); else dbRenderSingle(b);
+  try {
+    await ResearchUI.chartsReady();
+    if (dbCur !== b) return;
+    dbClean();
+    if (isCmp) dbRenderCompare(); else dbRenderSingle(b);
+  } catch (error) {
+    const summary = document.getElementById("summary");
+    const retry = document.createElement("button");
+    retry.className = "btn ghost";
+    retry.textContent = "重新加载图表";
+    retry.addEventListener("click", () => dbSelect(dbCur));
+    const message = document.createElement("span");
+    message.textContent = error.message;
+    summary.append(message, retry);
+  }
 }
 
 function dbRenderSummary(b) {

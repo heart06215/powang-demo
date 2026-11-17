@@ -1,4 +1,4 @@
-# 破妄 · 公开演示
+# 澄明 · 公开演示
 
 https://heart06215.github.io/powang-demo/
 

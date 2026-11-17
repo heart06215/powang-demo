@@ -21,7 +21,7 @@ function chatAddMsg(who, html) {
   const div = document.createElement("div");
   div.className = "msg " + who;
   const ts = new Date().toLocaleTimeString("zh-CN", { hour12: false });
-  div.innerHTML = `<div class="who">${who === "user" ? "YOU" : "破妄 AI"} <span style="opacity:.5;margin-left:6px" class="mono">${ts}</span></div><div class="bubble">${html}</div>`;
+  div.innerHTML = `<div class="who">${who === "user" ? "YOU" : "澄明 AI"} <span style="opacity:.5;margin-left:6px" class="mono">${ts}</span></div><div class="bubble">${html}</div>`;
   log.appendChild(div);
   log.scrollTop = log.scrollHeight;
   return div;
@@ -54,19 +54,18 @@ function chatInit() {
       chatSend();
     };
   });
-  chatAddMsg("ai", "你好，我是破妄 AI 分析师。我可以基于已分析的评论数据回答六分类统计、双社区对比、趋势、网络用语含义等问题。先到「标注」页完成锚定集并触发分析，数据就绪后我就能给你洞察了。");
+  chatAddMsg("ai", "你好，我是澄明 AI 分析师。我可以基于已分析的评论数据回答六分类统计、双社区对比、趋势、网络用语含义等问题。先到「标注」页完成锚定集并触发分析，数据就绪后我就能给你洞察了。");
   chatLoadSnap();
 }
 
 chatInit();
-ResearchUI.chartsReady().then(() => {
-  dbInit();
-  const graph = document.getElementById("graphFull");
-  const observer = new IntersectionObserver((entries) => {
-    if (entries.some((entry) => entry.isIntersecting)) { observer.disconnect(); gfLoad(); }
-  }, { rootMargin: "240px" });
-  observer.observe(graph);
-}).catch((error) => {
-  document.getElementById("summary").textContent = error.message;
-  document.getElementById("gfStat").textContent = "图表资源加载失败，请刷新重试";
-});
+// Render statistics immediately; the graph loads independently near the viewport.
+dbInit();
+const graphObserver = new IntersectionObserver((entries) => {
+  if (!entries.some((entry) => entry.isIntersecting)) return;
+  graphObserver.disconnect();
+  ResearchUI.chartsReady().then(() => gfLoad()).catch((error) => {
+    document.getElementById("gfStat").textContent = error.message;
+  });
+}, { rootMargin: "240px" });
+graphObserver.observe(document.getElementById("graphFull"));

@@ -37,7 +37,7 @@
     if (chartPromise) return chartPromise;
     chartPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js";
+      script.src = new URL("vendor/echarts.min.js", document.baseURI).href;
       script.onload = () => resolve();
       script.onerror = () => { chartPromise = undefined; script.remove(); reject(new Error("图表资源未加载，请检查网络后重试")); };
       document.head.append(script);

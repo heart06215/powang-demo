@@ -3,14 +3,18 @@
   "use strict";
   const base = new URL(".", document.currentScript.src);
   const nativeFetch = window.fetch.bind(window);
-  let snapshotPromise;
-  /** @returns {Promise<object>} */
-  function snapshot() {
-    if (!snapshotPromise) snapshotPromise = nativeFetch(new URL("data/site.json", base)).then((response) => {
-      if (!response.ok) throw new Error("演示数据读取失败，请刷新页面");
-      return response.json();
-    });
-    return snapshotPromise;
+  const snapshots = new Map();
+  /** @param {string} name @returns {Promise<object>} */
+  function snapshot(name) {
+    if (!snapshots.has(name)) {
+      const promise = nativeFetch(new URL(`data/${name}.json`, base)).then((response) => {
+        if (!response.ok) throw new Error("演示数据读取失败，请刷新页面");
+        return response.json();
+      });
+      snapshots.set(name, promise);
+      promise.catch(() => snapshots.delete(name));
+    }
+    return snapshots.get(name);
   }
   /** @param {string} pathname @returns {string} */
   function localPath(pathname) {
@@ -37,32 +41,35 @@
       const limit = Number(url.searchParams.get("comments") || 520) <= 240 ? 240 : 520;
       return nativeFetch(new URL(`data/graph-${limit}.json`, base));
     }
-    const data = await snapshot();
     const params = url.searchParams;
-    const bvid = params.get("bvid") || data.videos[0]?.bvid;
-    const rows = data.comments[bvid] || [];
+    if (path === "/api/videos") return jsonResponse({videos: await snapshot("videos")});
+    if (path === "/api/research/report") return jsonResponse(await snapshot("report"));
+    if (path.startsWith("/api/analysis/")) {
+      const bvid = path.split("/").pop();
+      if (!["BV1fy4y1L7Rq", "BV1h1kcBfEuJ"].includes(bvid)) return jsonResponse("没有对应视频的数据", 404);
+      return jsonResponse(await snapshot(`analysis-${bvid}`));
+    }
+    const videos = await snapshot("videos");
+    if (path === "/api/anchors") {
+      const anchors = await snapshot("anchors");
+      const byVideo = Object.fromEntries(videos.map((video) => [video.bvid, anchors.filter((row) => row.bvid === video.bvid)]));
+      return jsonResponse({anchors, by_video: byVideo, count: anchors.length, count_per_video: Object.fromEntries(Object.entries(byVideo).map(([key, items]) => [key, items.length]))});
+    }
+    const bvid = params.get("bvid") || videos[0]?.bvid;
+    if (!videos.some((video) => video.bvid === bvid)) return jsonResponse("没有对应视频的数据", 404);
+    const rows = await snapshot(`comments-${bvid}`);
     const size = Math.max(1, Math.min(200, Number(params.get("size")) || 50));
     const category = params.get("category") || "";
-    const anchors = data.anchors.filter((row) => row.bvid === bvid);
-    const labeled = new Set(anchors.map((row) => String(row.rpid)));
-    if (path === "/api/videos") return jsonResponse({videos: data.videos});
-    if (path === "/api/research/report") return jsonResponse(data.report);
-    if (path.startsWith("/api/analysis/")) {
-      const analysis = data.analyses[path.split("/").pop()];
-      return analysis ? jsonResponse(analysis) : jsonResponse("没有对应视频的数据", 404);
-    }
     if (path === "/api/comments") {
       const text = (params.get("q") || "").trim().toLowerCase();
       const selected = rows.filter((row) => (!category || category === "all" || row.category === category) && (!text || row.text.toLowerCase().includes(text)));
       const order = params.get("order") === "like" ? "like" : "ctime";
       selected.sort((a, b) => (b[order] || 0) - (a[order] || 0));
       const page = Math.max(1, Number(params.get("page")) || 1);
-      return jsonResponse({items: selected.slice((page - 1) * size, page * size), total: selected.length, page, size, analyzed: true, meta: data.analyses[bvid]?.meta || {}});
+      return jsonResponse({items: selected.slice((page - 1) * size, page * size), total: selected.length, page, size, analyzed: true, meta: videos.find((video) => video.bvid === bvid) || {}});
     }
-    if (path === "/api/anchors") {
-      const byVideo = Object.fromEntries(data.videos.map((video) => [video.bvid, data.anchors.filter((row) => row.bvid === video.bvid)]));
-      return jsonResponse({anchors: data.anchors, by_video: byVideo, count: data.anchors.length, count_per_video: Object.fromEntries(Object.entries(byVideo).map(([key, items]) => [key, items.length]))});
-    }
+    const anchors = (await snapshot("anchors")).filter((row) => row.bvid === bvid);
+    const labeled = new Set(anchors.map((row) => String(row.rpid)));
     if (path === "/api/label/queue") {
       const pool = rows.filter((row) => !labeled.has(String(row.rpid)));
       return jsonResponse({bvid, items: pool.slice(0, size), labeled: anchors.length, total_pool: pool.length});
@@ -94,7 +101,7 @@
         continue;
       }
       if (value.startsWith(base.pathname)) continue;
-      const file = path === "/" ? "index.html" : path.slice(1).replace(/^(comments|insight|label)$/, "$1.html");
+      const file = path === "/" ? "index.html" : path.slice(1).replace(/^(comments|insight|label|workbench)$/, "$1.html");
       element.setAttribute(attr, new URL(file + url.search + url.hash, base).href);
     }
   }

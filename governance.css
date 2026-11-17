@@ -35,6 +35,25 @@ html[data-theme="dark"] {
 .app-brand > span { min-width: 0; flex: 1; }.app-brand img { flex-shrink: 0; }.app-brand strong { white-space: nowrap; }.app-brand small { font-size: var(--type-caption); letter-spacing: 0; white-space: nowrap; }
 .sidebar-label { font-size: var(--type-caption); color: var(--gov-muted); padding: var(--space-4) var(--space-3) var(--space-3); letter-spacing: 1px; }
 .sidebar-label span { margin-left: var(--space-2); font-size: var(--type-caption); letter-spacing: 1.4px; }
+.workbench-navigation > summary { cursor: pointer; display: flex; align-items: center; list-style: none; color: var(--gov-ink); font-weight: 900; min-height: 44px; }
+.workbench-navigation > summary::-webkit-details-marker { display: none; }
+.workbench-navigation > summary:hover { background: var(--gov-soft); }
+.workbench-navigation > summary:focus-visible { outline: 3px solid var(--gov-focus); outline-offset: -3px; }
+.workbench-navigation .nav-chevron { margin-left: auto; transition: transform var(--gov-duration) ease-out; }
+.workbench-navigation > summary .nav-chevron { display: inline-block; font-size: var(--type-lead); line-height: 1; }
+.workbench-navigation[open] .nav-chevron { transform: rotate(180deg); }
+.workbench-navigation .side-nav { padding-bottom: var(--space-5); }
+.workbench-main { max-width: 1440px; padding: var(--space-12) var(--space-10); margin: 0 auto; }
+.workbench-main h1 { font-size: var(--type-page); font-weight: 900; }
+.workbench-intro { color: var(--muted); max-width: 48em; margin: var(--space-4) 0 var(--space-10); }
+.workbench-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); }
+.workbench-card { background: var(--surface); border: 2px solid var(--line); padding: var(--space-8); display: flex; align-items: flex-start; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.workbench-card h2 { font-size: var(--type-title); }
+.workbench-card p { color: var(--muted); margin-bottom: auto; }
+.workbench-card .action { text-decoration: none; }
+.news-case-list, .news-card { min-width: 0; }
+.news-card { overflow-wrap: anywhere; }
+@media (max-width: 767px) { .workbench-main { padding: var(--space-8) var(--space-4); } .workbench-grid { grid-template-columns: 1fr; } .workbench-card { padding: var(--space-6); } }
 .side-nav { display: flex; flex-direction: column; gap: var(--space-2); }
 .side-nav a { display: flex; align-items: center; gap: var(--space-3); min-height: 46px; padding: var(--space-3); border-radius: var(--radius-md); color: var(--gov-muted); font-size: var(--type-body); transition: background var(--gov-duration), color var(--gov-duration); }
 .side-nav svg { width: 18px; height: 18px; }
@@ -84,7 +103,7 @@ html[data-theme="dark"] {
 .home-hero-brand > div { min-width: 0; }
 .home-hero-brand img { width: 72px; height: 72px; flex-shrink: 0; }
 .home-hero-brand .eyebrow { margin-bottom: var(--space-1); }
-.home-hero h1 { font-size: var(--type-display); font-weight: 900; line-height: 1.2; letter-spacing: 6px; }
+.home-hero h1 { font-size: clamp(var(--type-large), 7vw, var(--type-jumbo)); font-weight: 900; line-height: 1.15; letter-spacing: 6px; }
 .home-hero-lead { max-width: 960px; font-size: var(--type-body); line-height: 1.9; color: var(--gov-ink); }
 .home-hero-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
 .home-hero-grid article { padding: var(--space-5); border-top: 3px solid var(--gov-accent); background: var(--gov-bg); }
@@ -350,10 +369,12 @@ html[data-theme="dark"] {
 .evidence-card blockquote { font-size: var(--type-body); }
 .economy-grid { grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); }
 .donut-layout { flex-wrap: wrap; }
-.donut-center strong { font-size: var(--type-display); }
-.donut-center strong span { font-size: var(--type-lead); }
+.donut-center { inset: 18%; gap: var(--space-1); }
+.donut-center strong { font-size: var(--type-title); line-height: 1.15; white-space: nowrap; }
+.donut-center strong span { font-size: var(--type-body); }
 .donut-center > span, .donut-center small { font-size: var(--type-caption); }
 .donut-legend { font-size: var(--type-small); }
+.donut-legend > div { display: grid; grid-template-columns: 7px minmax(4em, 1fr) auto; gap: var(--space-2); white-space: nowrap; }
 .economy-bottom { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .economy-bottom strong { font-size: var(--type-page); overflow-wrap: anywhere; }
 .economy-bottom strong small { font-size: var(--type-caption); }
@@ -761,12 +782,16 @@ html[data-theme="dark"] .platform-chips span:last-child { color: #090B10; }
 }
 
 /* 微调情况报告：标注扫描表 */
-.finetune-scan { width: 100%; border-collapse: collapse; margin: 16px 0 12px; font-size: var(--type-small); }
+.finetune-scan { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 16px 0 12px; font-size: var(--type-small); }
 .finetune-scan caption { text-align: left; font-size: var(--type-caption); color: var(--muted); padding-bottom: 8px; }
 .finetune-scan th, .finetune-scan td { border-bottom: 1px solid var(--grid); padding: 8px 6px; text-align: left; vertical-align: top; }
 .finetune-scan thead th { font-size: var(--type-caption); color: var(--muted); letter-spacing: 1px; }
-.finetune-scan tbody th { font-weight: 900; white-space: nowrap; }
-.finetune-scan td:last-child { font-variant-numeric: tabular-nums; font-weight: 900; white-space: nowrap; }
+.finetune-scan th:first-child { width: 28%; }
+.finetune-scan th:nth-child(2) { width: 38%; }
+.finetune-scan th:last-child { width: 34%; }
+.finetune-scan :is(th, td) { overflow-wrap: anywhere; }
+.finetune-scan tbody th { font-weight: 900; white-space: normal; }
+.finetune-scan td:last-child { font-variant-numeric: tabular-nums; font-weight: 900; white-space: normal; }
 @media (max-width: 767px) { .finetune-scan th, .finetune-scan td { padding: 6px 4px; } .finetune-scan tbody th, .finetune-scan td:last-child { white-space: normal; } }
 .finetune-anchor-list { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 12px; padding: 0; list-style: none; }
 .finetune-anchor-list li { display: flex; align-items: baseline; gap: 6px; font-size: var(--type-caption); }

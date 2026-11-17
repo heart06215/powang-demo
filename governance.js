@@ -280,7 +280,7 @@
   /** @param {boolean} policyOnly @returns {void} */
   function exportResearch(policyOnly) {
     const date = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(new Date());
-    const lines = ["# 破妄 · 网络生态治理与立法研究", "", `导出日期：${date}（北京时间）`, "", "## 研究定位", "围绕反讽、圈层黑话与复读中的语境歧义，整理模型标签、原始评论与人工复核材料，支持我国网络治理规则细化与立法研究。", ""];
+    const lines = ["# 澄明 · 网络生态治理与立法研究", "", `导出日期：${date}（北京时间）`, "", "## 研究定位", "围绕反讽、圈层黑话与复读中的语境歧义，整理模型标签、原始评论与人工复核材料，支持我国网络治理规则细化与立法研究。", ""];
     const evidence = data.officialLegalGaps;
     lines.push("## 官方起草说明指出的制度问题", `${evidence.publisher}，${evidence.publishedOn} 发布。${evidence.document}，${evidence.locator}。`, ...evidence.quotes.flatMap((quote) => ["", `> ${quote}`]), "", `官方原文：${evidence.url}`, evidence.draftStatus, evidence.enforcementGap, "");
     if (!policyOnly) {
@@ -306,13 +306,13 @@
       lines.push("", "## 人工标注预算（假设情景）", `数据范围：两个线上视频评论总数，${commentCount(budget.count)} 条。核对时间：${data.annotationBudget.commentCountVerifiedAt}。`, ...data.annotationBudget.videos.map((video) => `- ${video.name}：${commentCount(video.onlineCount)} 条。来源：${video.countUrl}，字段 ${data.annotationBudget.commentCountField}。`), `按 ${budget.seconds} 秒/条、每天 8 小时中 ${(budget.efficiency * 100).toFixed(0)}% 为有效标注、日薪 150 元计算：${number(budget.throughput)} 条 / 人 / 天。`, `全人工：1 人工作 ${workDuration(budget.manualDays)}，${number(budget.manualCost)} 元。`, `全量雇工复核情景：107 条示范 + ${(budget.reviewRate * 100).toFixed(0)}% 剩余样本抽检：${commentCount(budget.assistedLabels)} 条人工任务，1 人工作 ${workDuration(budget.assistedDays)}，人工部分 ${number(budget.assistedCost)} 元。`, "费用按完整工作日向上取整，年数按 365 天换算且未扣休息日。后续更多预估立法评估用费用未纳入计算，包括标注后的数据整理、总结分析与研究论证；模型推理、招聘培训、术语维护、争议仲裁和额外质检也需要另行预算。抽检比例未经质量实测，人工差额不代表总成本节省。线上评论计数为公开接口返回的核对时快照，不等于本地采集量，实际可标注量还受删除、可访问性与去重影响。");
     }
     lines.push("", "## 样本在平台中的范围", `这只是 bilibili 一个视频平台的两个视频。UP 主${data.annotationBudget.rankingReference.owner}的公开榜单将其列为评论量前二，数据日期为 ${data.annotationBudget.rankingReference.dataDate}，非官方实时排名，且仅统计视频稿件。`, data.annotationBudget.rankingReference.url, "", "## 圈层知识与人才门槛", "圈内黑话、人物关系和事件沿革不是通用知识。标注人员需理解圈层语境并统一分类口径；研究人员还要兼具证据整理、数据分析、研究设计和治理规则知识，复合能力更难组织。模型方案旨在复用人工经验，减少全量逐条归类，把稀缺人力用于难例复核和研究论证。", "", "## 国内事件与语境核查", ...data.newsCases.map((item) => `- ${item.date} ${item.title}（${item.source}）。${item.url}\n  事件简述：${item.facts}\n  语境不明的处置难点：${item.difficulty}`), "新闻资料用于展示治理需求，识别成效以本项目已完成样本为准。");
-    downloadText(`破妄-${policyOnly ? "立法研究提纲" : "治理研究摘要"}-${date}.md`, lines.join("\n"));
+    downloadText(`澄明-${policyOnly ? "立法研究提纲" : "治理研究摘要"}-${date}.md`, lines.join("\n"));
   }
   /** @param {string} role @param {string} message @returns {HTMLElement} */
   function addMessage(role, message) {
     byId("chatMessages").querySelector(".assistant-welcome")?.remove();
     const node = document.createElement("div"); node.className = `chat-message ${role}`;
-    const label = document.createElement("small"); label.textContent = role === "user" ? "研究提问" : "破妄 · AI 助手";
+    const label = document.createElement("small"); label.textContent = role === "user" ? "研究提问" : "澄明 · AI 助手";
     const body = document.createElement("span"); body.textContent = message;
     node.append(label, body); byId("chatMessages").append(node); byId("chatMessages").scrollTop = byId("chatMessages").scrollHeight;
     return node;

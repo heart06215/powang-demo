@@ -1,11 +1,9 @@
 /* One navigation and mobile keyboard contract for every research page. */
 (() => {
   "use strict";
-  const routePath = location.pathname.replace("/powang-demo/", "/").replace(/\.html$/, "");
-  const home = routePath === "/" || routePath === "/index";
-  const page = routePath.startsWith("/comments") ? "comments"
-    : routePath.startsWith("/label") ? "label" : home ? "overview" : "insight";
-  const pageNames = { overview: "治理总览", comments: "评论证据库", label: "人工标注与复核", insight: "社区深度洞察" };
+  const home = document.body.dataset.researchPage === "home";
+  const page = home ? "overview" : document.body.dataset.researchPage || "insight";
+  const pageNames = { overview: "治理总览", workbench: "数据与复核", comments: "评论证据库", label: "人工标注与复核", insight: "社区深度洞察" };
   const icons = {
     overview: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
     economy: '<path d="M4 3v17h17M8 14l4-5 4 2 5-7"/>',
@@ -21,6 +19,7 @@
     label: '<rect x="4" y="3" width="16" height="18"/><path d="m8 11 3 3 5-6"/>'
   };
   icons.evaluation = icons.insight;
+  icons.workbench = icons.overview;
   const research = [
     ["overview", "治理总览", home ? "#overview" : "/"],
     ["ambiguity", "圈层黑话难判", home ? "#ambiguity" : "/#ambiguity"],
@@ -32,6 +31,7 @@
     ["assistant", "查询圈层语境", home ? "#assistant" : "/#assistant"]
   ];
   const tools = [
+    ["workbench", "数据与复核总览", "/workbench"],
     ["insight", "社区深度洞察", "/insight"],
     ["graph", "评论关系图谱", "/insight#graphFull"],
     ["evaluation", "模型测试与微调报告", "/insight#evaluation"],
@@ -48,12 +48,12 @@
   const topbar = document.getElementById("workspaceTopbar");
   if (!navigation || !topbar) return;
   navigation.innerHTML = `<aside class="app-sidebar" id="sidebar" aria-label="工作空间导航">
-    <div class="sidebar-brand-row"><a class="app-brand" href="/powang-demo/index.html" aria-label="破妄，治理总览"><img src="/powang-demo/mark.svg" alt="" width="38" height="38"><span><strong>破妄<span class="brand-en">POWANG</span></strong><small>网络生态治理研究平台</small></span></a><button class="sidebar-close" id="sidebarClose" type="button" aria-label="关闭导航">×</button></div>
+    <div class="sidebar-brand-row"><a class="app-brand" href="/powang-demo/index.html" aria-label="澄明，治理总览"><img src="/powang-demo/mark.svg" alt="" width="38" height="38"><span><strong>澄明<span class="brand-en">CHENGMING</span></strong><small>网络生态治理研究平台</small></span></a><button class="sidebar-close" id="sidebarClose" type="button" aria-label="关闭导航">×</button></div>
     <div class="sidebar-label">研究工作空间 <span>RESEARCH</span></div><nav class="side-nav" aria-label="研究导航">${links(research)}</nav>
-    <div class="sidebar-label">数据与复核 <span>WORKBENCH</span></div><nav class="side-nav" aria-label="数据工具">${links(tools)}</nav>
+    <details class="workbench-navigation" id="workbenchNavigation" ${home ? "" : "open"}><summary class="sidebar-label">数据与复核 <span>WORKBENCH</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary><nav class="side-nav" aria-label="数据与复核">${links(tools)}</nav></details>
     <div class="sidebar-foot"><span class="status-dot"></span><span>让治理有据可依</span><span class="mono">V3.0</span></div>
   </aside><button class="sidebar-scrim" id="sidebarScrim" aria-label="关闭导航" type="button" tabindex="-1" hidden></button>`;
-  topbar.innerHTML = `<div class="topbar-location"><button class="icon-button menu-button" id="menuToggle" type="button" aria-label="打开导航" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span>破妄工作台</span><span class="breadcrumb-sep">/</span><strong>${pageNames[page]}</strong></div><div class="topbar-actions"><span class="connection-state" ${home ? 'id="connectionState" role="status"' : ""}><span class="status-dot"></span>${home ? "正在连接数据" : "本地研究模式"}</span><button class="theme-toggle" data-theme-toggle type="button"><span class="ico"></span><span class="txt">深色</span></button></div>`;
+  topbar.innerHTML = `<div class="topbar-location"><button class="icon-button menu-button" id="menuToggle" type="button" aria-label="打开导航" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><span>澄明工作台</span><span class="breadcrumb-sep">/</span><strong>${pageNames[page]}</strong></div><div class="topbar-actions"><span class="connection-state" ${home ? 'id="connectionState" role="status"' : ""}><span class="status-dot"></span>${home ? "正在连接数据" : "本地研究模式"}</span><button class="theme-toggle" data-theme-toggle type="button"><span class="ico"></span><span class="txt">深色</span></button></div>`;
 
   const sidebar = document.getElementById("sidebar");
   const toggle = document.getElementById("menuToggle");
@@ -99,7 +99,7 @@
     if (!sidebar.classList.contains("is-open")) return;
     if (event.key === "Escape") { event.preventDefault(); setMenu(false); }
     if (event.key === "Tab") {
-      const controls = [...sidebar.querySelectorAll("a,button")];
+      const controls = [...sidebar.querySelectorAll("a,button,summary")].filter((control) => control.getClientRects().length);
       if (event.shiftKey && document.activeElement === controls[0]) { event.preventDefault(); controls.at(-1).focus(); }
       else if (!event.shiftKey && document.activeElement === controls.at(-1)) { event.preventDefault(); controls[0].focus(); }
     }
