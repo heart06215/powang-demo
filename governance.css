@@ -222,6 +222,7 @@ html[data-theme="dark"] .home-hero-geometry { filter: drop-shadow(0 0 5px color-
 .statistical-note svg { width: 16px; height: 16px; margin-top: 3px; }
 .statistical-note strong { font-weight: 900; }.statistical-note a { text-decoration: underline; }
 .governance-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-5); }
+.community-results { margin-top: var(--space-5); }
 .category-bars { display: flex; flex-direction: column; gap: var(--space-5); margin-top: var(--space-6); margin-bottom: var(--space-6); }
 .category-row { display: grid; grid-template-columns: 74px 1fr 52px 42px; align-items: center; gap: var(--space-3); font-size: var(--type-small); }
 .category-track { height: 7px; border-radius: var(--radius-sm); background: var(--gov-soft); overflow: hidden; }
