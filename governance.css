@@ -662,7 +662,7 @@ html[data-theme="dark"] .home-hero-geometry { filter: drop-shadow(0 0 5px color-
   font-variant-numeric: tabular-nums;
 }
 
-#hardExamples, #architecture { scroll-margin-top: 92px; }
+#hardExamples, #enforcement, #architecture { scroll-margin-top: 92px; }
 .hard-examples-intro { color: var(--muted); margin-bottom: var(--space-3); }
 #evidenceCards { margin-bottom: var(--space-6); }
 .rule-gaps h4, .policy-library .legal-grounding h4 {

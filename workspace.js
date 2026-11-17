@@ -20,14 +20,16 @@
   };
   icons.evaluation = icons.insight;
   icons.workbench = icons.overview;
+  icons.architecture = icons.graph;
   const research = [
-    ["overview", "治理总览", home ? "#overview" : "/"],
-    ["ambiguity", "圈层黑话难判", home ? "#ambiguity" : "/#ambiguity"],
-    ["policy", "立法与取证难点", home ? "#policy" : "/#policy"],
-    ["efficiency", "标注成本与方案", home ? "#efficiency" : "/#efficiency"],
-    ["governance", "分类结果与复核", home ? "#governance" : "/#governance"],
+    ["policy", "立法与追责缘由", home ? "#policy" : "/#policy"],
+    ["news", "线上网暴与线下冲突", home ? "#news" : "/#news"],
     ["economy", "数字经济规模", home ? "#economy" : "/#economy"],
-    ["news", "典型事件与项目作用", home ? "#news" : "/#news"],
+    ["ambiguity", "圈层识别与执法困难", home ? "#ambiguity" : "/#ambiguity"],
+    ["architecture", "项目如何解决问题", home ? "#architecture" : "/#architecture"],
+    ["efficiency", "标注成本与方案", home ? "#efficiency" : "/#efficiency"],
+    ["overview", "治理总览", home ? "#overview" : "/#overview"],
+    ["governance", "分类结果与复核", home ? "#governance" : "/#governance"],
     ["assistant", "查询圈层语境", home ? "#assistant" : "/#assistant"]
   ];
   const tools = [
