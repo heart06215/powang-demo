@@ -110,7 +110,6 @@
     byId("onlineRankingNote").textContent = `排名依据：UP 主${ranking.owner}公开榜单（${ranking.dataDate}，仅视频稿件），非官方实时排名；评论计数核对于 ${config.commentCountVerifiedAt}。`;
     byId("onlineRankingSource").href = ranking.url;
     byId("heroOnlineDays").innerHTML = `1 人工作 ${workDurationHtml(baseline.manualDays)}`;
-    byId("impactManualDays").innerHTML = `1 人工作 ${workDurationHtml(baseline.manualDays)}`;
     byId("heroOnlineCost").textContent = (baseline.manualCost / 10000).toFixed(1);
     const seconds = Number(byId("budgetSeconds").value);
     const efficiency = Number(byId("budgetEfficiency").value);

@@ -640,22 +640,15 @@ html[data-theme="dark"] .home-hero-geometry { filter: drop-shadow(0 0 5px color-
 }
 
 .project-impact > .impact-intro { font-size: var(--type-lead); line-height: 1.8; margin: 16px 0 24px; }
-.impact-cost-comparison { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
-.impact-cost-comparison article { border-top: 6px solid var(--pink); padding: 20px 0; min-width: 0; }
-.impact-cost-comparison article.practice-cost { border-top-color: var(--blue); }
-.impact-cost-comparison article > span, .impact-cost-comparison article > small { font-size: var(--type-small); display: block; }
-.impact-cost-comparison strong { display: block; font-size: var(--type-metric); line-height: 1.4; margin: 12px 0; color: var(--gov-accent); }
-.impact-cost-comparison strong small { font-size: var(--type-body); margin-left: 12px; color: var(--ink); }
-.impact-cost-comparison p { font-size: var(--type-body); line-height: 1.8; margin-bottom: 12px; }
 .innovation-points { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; padding: 24px 0; border-block: 2px solid var(--line); }
 .innovation-points b { font-size: var(--type-small); color: var(--gov-accent); }
 .innovation-points p { font-size: var(--type-body); line-height: 1.8; margin-top: 12px; }
-@media (max-width: 767px) { .impact-cost-comparison, .innovation-points { grid-template-columns: 1fr; } }
+@media (max-width: 767px) { .innovation-points { grid-template-columns: 1fr; } }
 
 .project-impact { scroll-margin-top: 92px; }
 
 .baseline-throughput strong, .baseline-row strong, .online-scale-total strong,
-.online-video-count strong, .budget-results strong, .budget-table td, .impact-cost-comparison strong,
+.online-video-count strong, .budget-results strong, .budget-table td,
 .economy-bottom strong, .donut-legend strong, .growth-badge, .law-date, .content-section time,
 .category-row strong, .category-row > span:last-child, .source-details tbody :is(th, td:not(:last-child)) {
   font-family: var(--font-number);
@@ -765,7 +758,7 @@ html[data-theme="dark"] .home-hero-geometry { filter: drop-shadow(0 0 5px color-
 .heading-sub { display: block; margin-top: 8px; font-size: var(--type-title); font-weight: 900; letter-spacing: 1px; line-height: 1.4; color: var(--gov-accent); }
 
 /* ===== 年数放大 ===== */
-#heroOnlineDays em, #budgetManualDays em, #impactManualDays em, #budgetAssistedDays em {
+#heroOnlineDays em, #budgetManualDays em, #budgetAssistedDays em {
   font-style: normal; font-size: 1.35em; font-weight: 900; line-height: 1; color: var(--gov-accent); margin: 0 2px; white-space: nowrap;
 }
 
