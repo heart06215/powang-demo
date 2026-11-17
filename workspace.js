@@ -24,8 +24,8 @@
   const research = [
     ["policy", "立法与追责缘由", home ? "#policy" : "/#policy"],
     ["news", "线上网暴与线下冲突", home ? "#news" : "/#news"],
-    ["economy", "数字经济规模", home ? "#economy" : "/#economy"],
     ["ambiguity", "圈层识别与执法困难", home ? "#ambiguity" : "/#ambiguity"],
+    ["economy", "数字经济规模", home ? "#economy" : "/#economy"],
     ["architecture", "项目如何解决问题", home ? "#architecture" : "/#architecture"],
     ["efficiency", "标注成本与方案", home ? "#efficiency" : "/#efficiency"],
     ["overview", "治理总览", home ? "#overview" : "/#overview"],
