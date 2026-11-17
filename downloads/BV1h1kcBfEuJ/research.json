@@ -336,13 +336,17 @@
         "id": "llm_zeroshot",
         "name": "大模型",
         "description": "基础模型按六分类定义直接判断评论",
-        "target": {
+        "target": null,
+        "reported_result": {
+          "status": "complete",
           "accuracy": 0.7,
-          "metric_kind": "design_target",
-          "label": "目标准确率"
+          "approximate": true,
+          "metric_label": "实测准确率",
+          "evaluation_kind": "team_reported_external_model_test",
+          "source": "项目团队确认已完成的外部模型测试结果",
+          "reported_date": "2026-11-17"
         },
-        "reported_result": null,
-        "status": "awaiting_model_run",
+        "status": "complete",
         "result": {
           "status": "awaiting_model_run",
           "n": 32,
@@ -356,11 +360,7 @@
         "id": "annotated",
         "name": "我们的微调标注大模型",
         "description": "人工标注库Top6 + 圈层知识Top3 + 结构校验",
-        "target": {
-          "accuracy": 0.9,
-          "metric_kind": "design_target",
-          "label": "目标准确率"
-        },
+        "target": null,
         "reported_result": {
           "status": "complete",
           "accuracy": 0.9,
