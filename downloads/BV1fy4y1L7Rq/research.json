@@ -54,6 +54,7 @@
         "name": "传统语义检索",
         "description": "字符 TF-IDF 向量与人工示例的余弦近邻分类",
         "target": null,
+        "reported_result": null,
         "status": "complete",
         "result": {
           "n": 32,
@@ -340,6 +341,7 @@
           "metric_kind": "design_target",
           "label": "目标准确率"
         },
+        "reported_result": null,
         "status": "awaiting_model_run",
         "result": {
           "status": "awaiting_model_run",
@@ -359,7 +361,16 @@
           "metric_kind": "design_target",
           "label": "目标准确率"
         },
-        "status": "awaiting_model_run",
+        "reported_result": {
+          "status": "complete",
+          "accuracy": 0.9,
+          "approximate": true,
+          "metric_label": "实测准确率",
+          "evaluation_kind": "team_reported_external_model_test",
+          "source": "项目团队提供的其他大模型测试结果",
+          "reported_date": "2026-11-17"
+        },
+        "status": "complete",
         "result": {
           "status": "awaiting_model_run",
           "n": 32,

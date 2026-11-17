@@ -48,7 +48,7 @@
   const topbar = document.getElementById("workspaceTopbar");
   if (!navigation || !topbar) return;
   navigation.innerHTML = `<aside class="app-sidebar" id="sidebar" aria-label="工作空间导航">
-    <div class="sidebar-brand-row"><a class="app-brand" href="/powang-demo/index.html" aria-label="澄明，治理总览"><img src="/powang-demo/mark.svg" alt="" width="38" height="38"><span><strong>澄明<span class="brand-en">CHENGMING</span></strong><small>网络生态治理研究平台</small></span></a><button class="sidebar-close" id="sidebarClose" type="button" aria-label="关闭导航">×</button></div>
+    <div class="sidebar-brand-row"><a class="app-brand" href="/powang-demo/index.html" aria-label="澄明，治理总览"><img src="/powang-demo/mark.svg" alt="" width="38" height="38"><span><strong>澄明</strong><small>网络生态治理研究平台</small></span></a><button class="sidebar-close" id="sidebarClose" type="button" aria-label="关闭导航">×</button></div>
     <div class="sidebar-label">研究工作空间 <span>RESEARCH</span></div><nav class="side-nav" aria-label="研究导航">${links(research)}</nav>
     <details class="workbench-navigation" id="workbenchNavigation" ${home ? "" : "open"}><summary class="sidebar-label">数据与复核 <span>WORKBENCH</span><span class="nav-chevron" aria-hidden="true">⌄</span></summary><nav class="side-nav" aria-label="数据与复核">${links(tools)}</nav></details>
     <div class="sidebar-foot"><span class="status-dot"></span><span>让治理有据可依</span><span class="mono">V3.0</span></div>

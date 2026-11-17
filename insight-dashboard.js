@@ -57,6 +57,7 @@ async function dbInit() {
 async function dbSelect(b) {
   document.querySelectorAll("#videoTabs .tab").forEach(t => t.classList.toggle("active", t.dataset.b === b));
   dbCur = b;
+  document.getElementById("commentEvidenceLink").href = b === "__cmp__" ? "/comments" : "/comments?" + new URLSearchParams({bvid: b});
   const isCmp = b === "__cmp__";
   document.getElementById("cmpBox").style.display = isCmp ? "" : "none";
   document.getElementById("singleBox").style.display = isCmp ? "none" : "";
@@ -97,8 +98,8 @@ function dbRenderSingle(b) {
   if (!v) return;
   const real = !!v.analysis;
   if (!real) {
-    document.getElementById("overview").innerHTML = '<p class="tool-intro">该视频尚未分析。<a href="/powang-demo/label.html">前往人工标注与分析</a>后查看真实结果。</p>';
-    for (const id of ["pie1", "bar1", "trend1", "slangbar1", "rep1"]) document.getElementById(id).replaceChildren();
+    document.getElementById("overview").innerHTML = '<p class="tool-intro">该视频暂无分类结果，可切换至已有分析数据的视频查看。</p>';
+    for (const id of ["pie1", "bar1", "trend1", "slangbar1"]) document.getElementById(id).replaceChildren();
     return;
   }
   const raw = v.analysis;
@@ -115,7 +116,6 @@ function dbRenderSingle(b) {
   dbDrawTrend("trend1", (v.trend || []));
   const slangSrc = (v.top_slang && v.top_slang.length) ? v.top_slang : [];
   dbDrawSlangBar(slangSrc);
-  dbDrawReps((v.representative || {}));
 }
 
 function dbDrawPie(cs) {
@@ -156,17 +156,6 @@ function dbDrawSlangBar(words) {
       data: ws.map((w, i) => ({ value: w.count, itemStyle: { color: i === ws.length - 1 ? dbC().blue : dbC().cyan } })),
       label: { show: true, position: "right", color: dbC().muted, fontSize: 16 } }] });
 }
-function dbDrawReps(R) {
-  document.getElementById("rep1").innerHTML = DB_CATS.map(n => {
-    const pool = R[n] || [];
-    return `<div class="rep"><span class="badge ${DB_CLS[n]}">${ResearchUI.categoryLabel(n)}</span>
-      ${pool.slice(0, 2).map(r => {
-        const chips = (r.slang_tags || []).slice(0, 4).map(t => `<span style="display:inline-block;font-size:var(--type-caption);padding:1px 6px;border:1.5px solid var(--cat-feud);color:var(--cat-feud);margin:2px 4px 0 0">${dbEsc(t)}</span>`).join("");
-        return `<div class="txt">${dbEsc(r.text)}</div><div class="muted" style="font-size:var(--type-small)">置信 ${((r.confidence || 0) * 100).toFixed(0)}%</div>${chips ? `<div>${chips}</div>` : ""}`;
-      }).join("") || '<div class="txt muted">暂无</div>'}</div>`;
-  }).join("");
-}
-
 /* ---------- 对比 ---------- */
 function dbRenderCompare() {
   const FANv = dbVideos.find(v => v.community === "饭圈") || dbVideos[1];
@@ -177,7 +166,7 @@ function dbRenderCompare() {
   }
   if (!FANv.analysis || !GAMv.analysis) {
     for (const id of ["cmpTable", "cmpCols", "cmpDiff", "cmpRadar"]) document.getElementById(id).replaceChildren();
-    document.getElementById("cmpInsight").textContent = "请先完成两个社区的分析，再比较真实样本。";
+    document.getElementById("cmpInsight").textContent = "当前可查看已有社区的分类结果，双社区对照将在两组数据齐备后展示。";
     return;
   }
   const FAN = { meta: FANv, cs: FANv.analysis };

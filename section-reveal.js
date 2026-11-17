@@ -1,5 +1,6 @@
 /* Local, dependency-free cursor choreography for the competition homepage. */
 (() => {
+  if (document.body.dataset.researchPage === "comments") return;
   const motion = window.matchMedia("(prefers-reduced-motion: no-preference)");
   if (!motion.matches || !("IntersectionObserver" in window)) return;
 

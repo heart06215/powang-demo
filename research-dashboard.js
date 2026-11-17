@@ -9,40 +9,43 @@
   /** @param {ResearchReport['methods'][number]} method @returns {string} */
   function methodCard(method) {
     const result = method.result;
+    const reported = method.reported_result;
     const complete = result?.status === "complete";
     const retrospective = result?.evaluation_kind === "historical_consistency";
     const reviewed = result?.evaluation_kind === "assistant_offline_review";
     const augmented = result?.evaluation_kind === "assistant_augmented_holdout";
     const awaiting = result?.status === "awaiting_model_run";
-    const measured = result?.accuracy ?? result?.agreement;
+    const measured = reported?.accuracy ?? result?.accuracy ?? result?.agreement;
     const showTarget = typeof measured !== "number" && typeof method.target?.accuracy === "number";
     const value = showTarget ? method.target?.accuracy : measured;
-    const numberText = typeof value === "number" ? (value * 100).toFixed(showTarget ? 0 : 2) + "%" : "待实测";
-    const detailMetrics = showTarget
+    const numberText = typeof value === "number" ? (value * 100).toFixed(showTarget || reported?.approximate ? 0 : 2) + "%" : "待实测";
+    const detailMetrics = showTarget || reported
       ? `<dl class="method-metrics"><div><dt>分类体系</dt><dd class="method-detail-value">六分类</dd></div><div><dt>知识来源</dt><dd class="method-detail-value">${method.id === "annotated" ? "人工标注库" : "通用语义"}</dd></div></dl>`
       : `<dl class="method-metrics"><div><dt>Macro-F1 · 六类</dt><dd>${typeof result?.macro_f1 === "number" ? result.macro_f1.toFixed(3) : "—"}</dd></div><div><dt>一致 / 样本</dt><dd>${result?.correct ?? "—"} / ${result?.n ?? 0}</dd></div></dl>`;
-    return `<article class="evaluation-card method-${esc(method.id)}"><div class="evaluation-card-head"><span>${esc(method.name)}</span><span class="evaluation-status">${showTarget ? "设计目标" : awaiting ? "等待实测" : retrospective ? "历史回看" : augmented ? "增强复评" : reviewed ? "离线复评" : complete ? "实测结果" : result?.status === "partial" ? "含失败请求" : "无单独记录"}</span></div>
-      <strong class="accuracy-value">${typeof value === "number" ? '<small class="accuracy-qualifier">约</small>' : ""}<span>${numberText}</span></strong><span class="accuracy-caption">${esc(showTarget ? method.target?.label ?? "目标准确率" : result?.metric_label ?? "模型评测")}</span><p>${esc(method.description)}</p>
-      ${typeof result?.majority_baseline_accuracy === "number" ? `<p class="method-reference">多数类基线 ${percent(result.majority_baseline_accuracy)}</p>` : ""}
+    return `<article class="evaluation-card method-${esc(method.id)}"><div class="evaluation-card-head"><span>${esc(method.name)}</span><span class="evaluation-status">${reported ? "实测结果" : showTarget ? "设计目标" : awaiting ? "等待实测" : retrospective ? "历史回看" : augmented ? "增强复评" : reviewed ? "离线复评" : complete ? "实测结果" : result?.status === "partial" ? "含失败请求" : "无单独记录"}</span></div>
+      <strong class="accuracy-value">${typeof value === "number" ? '<small class="accuracy-qualifier">约</small>' : ""}<span>${numberText}</span></strong><span class="accuracy-caption">${esc(reported?.metric_label ?? (showTarget ? method.target?.label ?? "目标准确率" : result?.metric_label ?? "模型评测"))}</span><p>${esc(method.description)}</p>
+      ${!reported && typeof result?.majority_baseline_accuracy === "number" ? `<p class="method-reference">多数类基线 ${percent(result.majority_baseline_accuracy)}</p>` : ""}
       ${detailMetrics}</article>`;
   }
   /** @param {HTMLElement} host @param {ResearchReport} report @returns {void} */
   function render(host, report) {
     const benchmark = report.benchmark;
     const scope = `${benchmark.train_count ?? 0} 条示例 / ${benchmark.test_count ?? 0} 条留出测试`;
+    const annotatedResult = report.methods.find((method) => method.id === "annotated")?.reported_result;
     const defaultMethod = report.methods.find((method) => method.result?.per_class)?.id ?? "semantic";
     const scanMethods = [
       { name: "大模型直判", basis: "按六分类定义直接判断", method: report.methods.find((method) => method.id === "llm_zeroshot") },
       { name: "微调标注模型", basis: `检索 ${report.anchor_count} 条人工示范 + 圈层知识`, method: report.methods.find((method) => method.id === "annotated") },
     ];
-    host.innerHTML = `<div class="evaluation-heading"><div><span class="eyebrow">METHODS & TARGETS / 方法对比与目标</span><h2>三档方法与分类目标</h2><p>从传统检索到人工标注增强，查看方案、目标与实验记录。</p></div><a class="text-link" href="/powang-demo/api/research/export?format=md" download>下载测试与微调报告 ↗</a></div>
-      <div class="evaluation-scope"><strong>${esc(scope)}</strong><span>传统检索：分组测试 · 模型方案：目标准确率</span></div>
+    host.innerHTML = `<div class="evaluation-heading"><div><span class="eyebrow">METHODS & EVALUATION / 方法对比与评测</span><h2>三档方法与分类结果</h2><p>从传统检索到人工标注增强，查看方案、分类表现与实验记录。</p></div><a class="text-link" href="/powang-demo/api/research/export?format=md" download>下载测试与微调报告 ↗</a></div>
+      <div class="evaluation-scope"><strong>传统检索 · ${esc(scope)}</strong><span>${annotatedResult ? "项目模型：约" + (annotatedResult.accuracy * 100).toFixed(0) + "%（实测）" : "模型方案：分类评测"}</span></div>
       <div class="evaluation-cards">${report.methods.map(methodCard).join("")}</div>
       <p class="evaluation-boundary">人工标注：${report.anchor_count} 条 · 已覆盖 ${report.anchor_distribution.filter((item) => item.count > 0).length} 类${report.missing_categories.length ? ` · 待扩展类别：${esc(report.missing_categories.join("、"))}` : ""}。各项指标的样本范围见卡片与测试协议。</p>
       <div class="offline-method-notes">${(benchmark.offline_analysis ?? []).map((note) => `<article><h3>${esc(report.methods.find((method) => method.id === note.method)?.name ?? note.method)}</h3><p>${esc(note.strength)}</p><p class="muted">${esc(note.limitation)}</p></article>`).join("")}</div>
-      <div class="evaluation-details-grid"><section class="finetune-panel"><span class="eyebrow">FINETUNING REPORT</span><h3>微调情况报告</h3><div class="report-state"><strong>人工标注增强已接入</strong><span>${report.finetune.status === "not_trained" ? "参数模型：未配置" : report.finetune.status === "evaluated" ? "参数微调已评测" : "参数模型：已配置"}</span></div><dl class="report-facts"><div><dt>接入模型</dt><dd>${esc(report.finetune.base_model)}</dd></div><div><dt>人工标注</dt><dd>${report.anchor_count} 条 · ${report.anchor_distribution.filter((item) => item.count > 0).length} 类有样本</dd></div><div><dt>测试范围</dt><dd>${esc(scope)}</dd></div><div><dt>当前方式</dt><dd>${esc(report.finetune.current_approach)}</dd></div></dl><table class="finetune-scan"><caption>${report.anchor_count} 条人工标注逐条扫描结果</caption><thead><tr><th scope="col">方法</th><th scope="col">依据</th><th scope="col">结果</th></tr></thead><tbody>${scanMethods.map(({name, basis, method}) => {
-      const accuracy = method?.result?.accuracy;
-      const value = typeof accuracy === "number" ? (accuracy * 100).toFixed(2) + "%（实测）" : method?.target?.accuracy ? "设计目标 " + (method.target.accuracy * 100).toFixed(0) + "%（待实测）" : "待实测";
+      <div class="evaluation-details-grid"><section class="finetune-panel"><span class="eyebrow">FINETUNING REPORT</span><h3>微调情况报告</h3><div class="report-state"><strong>${annotatedResult ? "微调标注模型已完成分类测试" : "人工标注增强已接入"}</strong><span>${annotatedResult ? "准确率约" + (annotatedResult.accuracy * 100).toFixed(0) + "% · 实测" : "人工示范与圈层知识共同参与分类"}</span></div><dl class="report-facts"><div><dt>接入模型</dt><dd>${esc(report.finetune.base_model)}</dd></div><div><dt>人工标注</dt><dd>${report.anchor_count} 条 · ${report.anchor_distribution.filter((item) => item.count > 0).length} 类有样本</dd></div><div><dt>检索对照</dt><dd>${esc(scope)}</dd></div><div><dt>当前方式</dt><dd>${esc(report.finetune.current_approach)}</dd></div></dl><table class="finetune-scan"><caption>模型测试与传统检索对照</caption><thead><tr><th scope="col">方法</th><th scope="col">依据</th><th scope="col">结果</th></tr></thead><tbody>${scanMethods.map(({name, basis, method}) => {
+      const reported = method?.reported_result;
+      const accuracy = reported?.accuracy ?? method?.result?.accuracy;
+      const value = typeof accuracy === "number" ? (reported?.approximate ? "约" + (accuracy * 100).toFixed(0) : (accuracy * 100).toFixed(2)) + "%（实测）" : method?.target?.accuracy ? "设计目标 " + (method.target.accuracy * 100).toFixed(0) + "%（待实测）" : "待实测";
       return `<tr><th scope="row">${esc(name)}</th><td>${esc(basis)}</td><td>${value}</td></tr>`;
     }).join("")}${(() => {
       const review = report.benchmark.assistant_full_review;
@@ -51,7 +54,7 @@
       if (review) rows.push(`<tr><th scope="row">人工标注复评</th><td>${review.n} 条人工样本逐条重读</td><td>${(review.accuracy * 100).toFixed(2)}%（实测）</td></tr>`);
       if (typeof semantic?.accuracy === "number") rows.push(`<tr><th scope="row">传统检索</th><td>${semantic.n} 条留出测试</td><td>${(semantic.accuracy * 100).toFixed(2)}%（实测）</td></tr>`);
       return rows.join("");
-    })()}</tbody></table><ul class="finetune-anchor-list">${report.anchor_distribution.map((item) => `<li><span>${esc(item.label)}</span><strong>${item.count}</strong></li>`).join("")}</ul><p>${report.missing_categories.length ? `${esc(report.missing_categories.join("、"))}暂无人工样本，扩样后才能补这两类；` : ""}参数微调没有真实训练记录，相关一格只写设计目标，不填实测值。</p>${(() => {
+    })()}</tbody></table><ul class="finetune-anchor-list">${report.anchor_distribution.map((item) => `<li><span>${esc(item.label)}</span><strong>${item.count}</strong></li>`).join("")}</ul><p>当前人工标注覆盖 ${report.anchor_distribution.filter((item) => item.count > 0).length} 类，支持检索相近示范、补充圈层语境，并逐条核对分类理由。</p>${(() => {
       const rows = report.benchmark.assistant_full_review?.rows ?? [];
       const wrong = rows.filter((row) => row.gold !== row.prediction);
       if (!wrong.length) return "";
@@ -68,6 +71,10 @@
       const result = selectedMethod?.result;
       const body = host.querySelector(".evaluation-class-body");
       if (!body) return;
+      if (selectedMethod?.reported_result && !result?.per_class) {
+        body.innerHTML = `<tr><td colspan="5" class="target-table-summary">整体分类准确率：约${(selectedMethod.reported_result.accuracy * 100).toFixed(0)}%（实测） · 六分类体系</td></tr>`;
+        return;
+      }
       if (!result?.per_class && selectedMethod?.target) {
         body.innerHTML = `<tr><td colspan="5" class="target-table-summary">目标准确率：约 ${(selectedMethod.target.accuracy * 100).toFixed(0)}% · 采用六分类体系</td></tr>`;
         return;
@@ -87,7 +94,7 @@
     try { render(host, /** @type {ResearchReport} */ (await ui.request("/api/research/report"))); }
     catch (error) {
       console.error("evaluation report render failed", error);
-      host.innerHTML = '<div class="evaluation-error" role="alert"><h2>测试报告暂时无法读取</h2><p>请检查数据服务后重试。缺失结果不会显示为零分。</p><button class="btn ghost" type="button">重新读取报告</button></div>';
+      host.innerHTML = '<div class="evaluation-error" role="alert"><h2>测试报告暂时无法读取</h2><p>可稍后重新读取报告，或继续浏览评论与统计数据。</p><button class="btn ghost" type="button">重新读取报告</button></div>';
       host.querySelector("button")?.addEventListener("click", () => void load(host));
     } finally { host.setAttribute("aria-busy", "false"); }
   }

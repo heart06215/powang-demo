@@ -267,7 +267,7 @@ function updateInfo() {
 function showEmpty(d) {
   const filtered = curCat !== "all" || $("searchBox").value.trim();
   let msg;
-  if (!d.analyzed) msg = "该视频尚未分析——请先到「标注」页完成锚定集并触发分析。";
+  if (!d.analyzed) msg = "该视频暂无分类结果，可切换至已有分析数据的视频查看。";
   else if (filtered) msg = "没有匹配的评论，试试更换分类或关键词。";
   else msg = "暂无评论。";
   listEl.innerHTML = `<div class="c-empty"><span class="muted">${msg}</span></div>`;
@@ -364,7 +364,7 @@ async function loadStrip() {
     }).join("") + `<div class="muted mono" style="align-self:center;padding:0 12px">总样本 ${window.ResearchNumbers.commentCount(n)}</div>`;
     strip.querySelectorAll(".f-cat").forEach(f => f.onclick = () => applyCat(f.dataset.c));
   } catch (e) {
-    strip.innerHTML = `<div class="muted">该视频尚未分析——先到「标注」页完成锚定集并触发分析。</div>`;
+    strip.innerHTML = `<div class="muted">该视频暂无分类统计，可切换至其他研究视频查看。</div>`;
   }
 }
 
@@ -456,7 +456,7 @@ dialog.addEventListener("click", e => {
 setupInfinite();
 init();
 </script>
-<script src="/powang-demo/section-reveal.js" defer></script>
+
 </div>
 </body>
 </html>

@@ -55,7 +55,7 @@
     </div>
     <div class="chart-card"><h3><i style="background:var(--cat-shui)"></i>时间趋势 · 按月堆叠</h3><div class="chart tall" id="trend1"></div></div>
     <div class="chart-card"><h3><i style="background:var(--cyan)"></i>高频网络用语 TOP15</h3><div class="chart tall" id="slangbar1"></div></div>
-    <div class="chart-card"><h3><i style="background:var(--blue)"></i>代表性评论</h3><div class="rep-grid" id="rep1"></div></div>
+    <div class="chart-card evidence-entry"><div><h3><i style="background:var(--blue)"></i>评论证据库</h3><p>按视频、类别和关键词检索评论，查看完整原文、分类理由与圈层用语，继续核对研究线索。</p></div><a class="btn primary" id="commentEvidenceLink" href="/powang-demo/comments.html">进入评论证据库 ↗</a></div>
   </div>
 
 </div>
@@ -131,19 +131,19 @@
 <div class="wrap" id="qa" style="padding-top:48px">
   <!-- 问答 -->
   <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">把发现转成研究问题</span><span class="sec-rule"></span></div>
-  <p class="muted mb-2">围绕分类差异、圈层用语与证据不足处提问，整理后续核验清单。</p>
+  <p class="muted mb-2">结合已有评论样本与分析结果，整理立法调研问题、执法核查线索和证据收集清单。</p>
   <div class="chat-layout">
     <aside class="side">
       <h3>数据快照</h3>
       <div id="chatSnap"><span class="muted">加载中...</span></div>
-      <h3>试试这样问</h3>
+      <h3>立法与执法辅助</h3>
       <div id="chatHintList" class="muted small" style="line-height:2.05">
-        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 这个视频的赞美占比是多少？</div>
-        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 如何核验疑似刷评线索？</div>
-        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 饭圈和二游的贬低比例对比如何？</div>
-        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 社区对骂主要集中在哪里？</div>
-        <div class="hint-q" style="cursor:pointer;padding:3px 0;border-bottom:1px solid var(--grid)">· 有哪些代表性的中立评论？</div>
-        <div class="hint-q" style="cursor:pointer;padding:3px 0">· "砌墙"是什么意思？</div>
+        <button class="hint-q" type="button">结合代表评论，整理疑似组织化刷评的执法核查线索与证据清单。</button>
+        <button class="hint-q" type="button">哪些圈层黑话与反讽表达需要补充上下文，才能判断攻击对象和传播意图？</button>
+        <button class="hint-q" type="button">比较两个社区的冲突表达，为平台治理规则细化整理判定要素与复核步骤。</button>
+        <button class="hint-q" type="button">把当前分析整理成立法调研提纲：问题表现、样本依据与规则需求。</button>
+        <button class="hint-q" type="button">围绕社区对骂，列出需要进一步调取的原文、时间和传播关联证据。</button>
+        <button class="hint-q" type="button">如何区分正常批评、重复应援与攻击性话术？结合样本给出人工核查要点。</button>
       </div>
       <h3>工具箱</h3>
       <div class="muted small">统计查询 · 时间趋势 · 热词排行 · 代表评论 · 双社区对比 · 网络用语RAG检索</div>
@@ -151,7 +151,7 @@
     <div class="chat-main">
       <div class="chat-log" id="chatLog"></div>
       <div class="chat-input">
-        <input id="chatQ" aria-label="向研究助手提问" placeholder="输入需要核验的治理研究问题" onkeydown="if(event.key==='Enter')chatSend()">
+        <input id="chatQ" aria-label="向研究助手提问" placeholder="输入立法调研或执法核查问题" onkeydown="if(event.key==='Enter')chatSend()">
         <button class="btn primary" id="chatSendB" onclick="chatSend()">发送 →</button>
       </div>
     </div>

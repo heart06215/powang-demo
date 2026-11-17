@@ -65,7 +65,7 @@
     </div>
     <div class="progress mt"><i id="progFill" style="width:0%"></i></div>
     <div class="flex-between mt small" style="flex-wrap:wrap">
-      <span class="muted">两视频各完成 <b class="mono" id="goalTxt">50</b> 条后可触发分析（建议目标 100 条）· 当前锚定集总数 <b class="mono" id="nAll">0</b> 条</span>
+      <span class="muted">每视频示范参考规模 <b class="mono" id="goalTxt">50</b> 条 · 当前人工示范总数 <b class="mono" id="nAll">0</b> 条</span>
       <span class="flex" style="gap:10px">
         <span id="saveStatus" class="muted mono" style="opacity:.7">示范与复核记录保存在本地</span>
         <button class="btn ghost" id="btnBackup" style="padding:6px 12px;font-size:var(--type-small)">导出示范集</button>
@@ -176,11 +176,11 @@ async function loadAnchorsInfo() {
   const bvid = document.getElementById("videoSel").value;
   const nCur = by[bvid] || 0;
   document.getElementById("nAll").textContent = window.ResearchNumbers.commentCount(d.count);
-  document.getElementById("progText").textContent = `本视频已标 ${window.ResearchNumbers.commentCount(nCur)} 条（触发线 50 / 目标 100）`;
+  document.getElementById("progText").textContent = `本视频人工示范 ${window.ResearchNumbers.commentCount(nCur)} 条`;
   document.getElementById("progFill").style.width = Math.min(100, (nCur/50)*100) + "%";
   const ready = videos.every(v => (by[v.bvid]||0) >= 50);
   document.getElementById("btnAnalyze").disabled = !ready;
-  document.getElementById("analyzeHint").textContent = ready ? "两视频均已达标，可开始分析" : "未达标：每视频需50条";
+  document.getElementById("analyzeHint").textContent = ready ? "两社区人工示范已就绪" : "批量分类参考线：每视频50条示范";
 }
 
 async function loadQueue() {

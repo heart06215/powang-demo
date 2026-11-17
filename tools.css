@@ -1,4 +1,10 @@
 /* Original v2 components, with shared workspace spacing and responsive fixes. */
+.tool-page .evidence-entry { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.evidence-entry > div { flex: 1; min-width: min(100%, 260px); }
+.evidence-entry p { color: var(--muted); margin-top: 12px; line-height: 1.8; }
+.side .hint-q { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--grid); background: transparent; color: inherit; font: inherit; line-height: inherit; padding: 8px 0; cursor: pointer; }
+.side .hint-q:hover { color: var(--blue); }
+.side .hint-q:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .tool-page .app-workspace > main.wrap, .tool-page main > .wrap { max-width: 1440px; padding-top: 32px; }
 .tool-page .footer { color: var(--muted); font-size: var(--type-small); }
 .tool-page .chart-card, .tool-page .cmp-block, .tool-page .side, .tool-page .chat-main { border: 2px solid var(--line); border-radius: 0; }

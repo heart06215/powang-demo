@@ -45,16 +45,15 @@ async function chatSend() {
   document.getElementById("chatSendB").disabled = false;
 }
 
+/** @returns {void} */
 function chatInit() {
   document.querySelectorAll(".hint-q").forEach(q => {
-    q.onmouseenter = () => q.style.color = "var(--cyan)";
-    q.onmouseleave = () => q.style.color = "";
     q.onclick = () => {
       document.getElementById("chatQ").value = q.textContent.replace(/^·\s*/, "").replace(/？$/, "");
-      chatSend();
+      if (!document.getElementById("chatQ").disabled) document.getElementById("chatQ").focus();
     };
   });
-  chatAddMsg("ai", "你好，我是澄明 AI 分析师。我可以基于已分析的评论数据回答六分类统计、双社区对比、趋势、网络用语含义等问题。先到「标注」页完成锚定集并触发分析，数据就绪后我就能给你洞察了。");
+  chatAddMsg("ai", "现有研究数据已就绪。可以围绕立法调研、执法核查和平台治理提问：比较社区差异，追溯评论原文与分类理由，整理需要补充的上下文和证据清单。左侧示例可直接填入提问框，分析报告与审查数据集可在本页导出。");
   chatLoadSnap();
 }
 
